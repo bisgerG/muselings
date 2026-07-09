@@ -1,0 +1,133 @@
+/* ===== 共用 ===== */
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
+  color: #1f2a24;
+}
+
+/* ===== 一般頁面（首頁/圖鑑/Marker） ===== */
+.page {
+  background: linear-gradient(160deg, #0e2a3a 0%, #1c4a4a 60%, #2c6e49 100%);
+  min-height: 100vh;
+  color: #f0f7f2;
+}
+.landing { max-width: 480px; margin: 0 auto; padding: 32px 20px 48px; text-align: center; }
+.badge {
+  display: inline-block; font-size: 12px; letter-spacing: 2px;
+  border: 1px solid #7fd1ae; color: #7fd1ae; border-radius: 999px; padding: 4px 12px;
+}
+h1 { margin: 12px 0 4px; font-size: 34px; letter-spacing: 6px; }
+.subtitle { margin: 0 0 24px; color: #a8d5bc; letter-spacing: 3px; }
+
+.story-card, .note-card {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px; padding: 16px 20px; margin: 16px 0;
+  text-align: left; line-height: 1.8; font-size: 15px;
+}
+.note-card h2 { font-size: 16px; margin: 0 0 8px; color: #7fd1ae; }
+.note-card ol { margin: 0; padding-left: 20px; }
+.note-card a { color: #7fd1ae; }
+.note-card code { background: rgba(0,0,0,0.3); padding: 1px 6px; border-radius: 4px; }
+
+.menu { display: flex; flex-direction: column; gap: 12px; margin: 24px 0; }
+.btn {
+  display: block; width: 100%; padding: 14px; border-radius: 12px;
+  background: rgba(255, 255, 255, 0.12); color: #f0f7f2;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  text-decoration: none; font-size: 16px; cursor: pointer; text-align: center;
+}
+.btn-primary { background: #2c9c6a; border-color: #2c9c6a; font-weight: 700; }
+.btn-danger { background: transparent; border-color: #d9777c; color: #d9777c; font-size: 13px; }
+
+.marker-frame { background: #fff; border-radius: 16px; padding: 16px; margin: 8px 0; }
+.marker-img { width: 100%; max-width: 360px; display: block; margin: 0 auto; }
+
+/* ===== 圖鑑 ===== */
+.dex-list { display: flex; flex-direction: column; gap: 16px; margin-top: 8px; }
+.dex-card {
+  background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px; padding: 20px; text-align: left;
+}
+.dex-card.locked { opacity: 0.55; }
+.dex-card h3 { margin: 4px 0; font-size: 22px; }
+.dex-card ul { margin: 8px 0; padding-left: 20px; font-size: 14px; line-height: 1.7; }
+.dex-emoji { font-size: 40px; }
+.dex-species { color: #a8d5bc; margin: 0; font-size: 14px; }
+.dex-hearts { margin: 6px 0 0; }
+.dex-date { font-size: 12px; color: #8fb8a0; margin: 8px 0 0; }
+.dex-locked-hint { font-size: 14px; color: #a8d5bc; }
+
+/* ===== AR 頁 UI 疊層 ===== */
+.ar-body { background: #000; }
+#ui {
+  position: fixed; inset: 0; z-index: 10;
+  pointer-events: none; /* 預設穿透，個別元件再開啟 */
+  display: flex; flex-direction: column;
+}
+#ui .hidden { display: none !important; }
+
+#topbar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px;
+}
+.ui-btn {
+  pointer-events: auto;
+  background: rgba(0, 0, 0, 0.55); color: #fff; text-decoration: none;
+  padding: 8px 14px; border-radius: 999px; font-size: 14px;
+}
+.hearts { background: rgba(0, 0, 0, 0.55); padding: 8px 14px; border-radius: 999px; font-size: 16px; }
+
+.hint {
+  margin: 8px auto 0; max-width: 85%;
+  background: rgba(0, 0, 0, 0.6); color: #ffe9a8;
+  padding: 10px 18px; border-radius: 999px; font-size: 15px; text-align: center;
+}
+
+.dialog {
+  pointer-events: auto;
+  margin-top: auto; margin-bottom: 24px; align-self: center;
+  width: calc(100% - 32px); max-width: 480px;
+  background: rgba(10, 30, 25, 0.88); border: 2px solid #7fd1ae;
+  border-radius: 16px; padding: 14px 18px 10px; color: #fff;
+  cursor: pointer;
+}
+.dialog-name {
+  display: inline-block; background: #2c9c6a; border-radius: 8px;
+  padding: 2px 10px; font-size: 13px; font-weight: 700; margin-bottom: 6px;
+}
+.dialog-text { margin: 4px 0; font-size: 17px; line-height: 1.7; min-height: 3.4em; }
+.dialog-next { text-align: right; font-size: 12px; color: #7fd1ae; animation: blink 1.2s infinite; }
+@keyframes blink { 50% { opacity: 0.2; } }
+
+.quiz {
+  pointer-events: auto;
+  margin-top: auto; margin-bottom: 24px; align-self: center;
+  width: calc(100% - 32px); max-width: 480px;
+  background: rgba(10, 30, 25, 0.92); border: 2px solid #ffd166;
+  border-radius: 16px; padding: 16px 18px; color: #fff;
+}
+.quiz-question { margin: 0 0 12px; font-size: 17px; line-height: 1.6; }
+.quiz-options { display: flex; flex-direction: column; gap: 10px; }
+.quiz-btn {
+  padding: 13px; border-radius: 12px; border: 1px solid #ffd166;
+  background: rgba(255, 209, 102, 0.12); color: #ffd166;
+  font-size: 16px; cursor: pointer;
+}
+.quiz-btn:active { background: rgba(255, 209, 102, 0.35); }
+
+.captured-panel {
+  pointer-events: auto;
+  position: absolute; inset: 0; margin: auto; height: fit-content;
+  width: calc(100% - 48px); max-width: 400px;
+  background: rgba(10, 30, 25, 0.95); border: 2px solid #ffd166;
+  border-radius: 20px; padding: 24px; color: #fff; text-align: center;
+}
+.captured-title { font-size: 24px; margin: 0 0 8px; }
+
+.flash {
+  position: absolute; inset: 0; background: #fff; opacity: 0;
+  pointer-events: none; transition: opacity 0.2s;
+}
+.flash.flash-on { opacity: 0.9; transition: opacity 0.15s; }

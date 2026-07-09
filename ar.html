@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>AR 任務｜恐龍廳</title>
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="ar-body">
+
+  <!-- ===== HTML UI 疊層（對話框、任務提示、答題） ===== -->
+  <div id="ui">
+    <div id="topbar">
+      <a class="ui-btn" href="index.html">← 離開</a>
+      <div id="hearts" class="hearts hidden"></div>
+      <a class="ui-btn" href="dex.html">📖</a>
+    </div>
+
+    <div id="hint" class="hint">請將鏡頭對準「時空裂縫」圖騰……</div>
+
+    <div id="dialog" class="dialog hidden">
+      <div id="dialog-name" class="dialog-name"></div>
+      <p id="dialog-text" class="dialog-text"></p>
+      <div id="dialog-next" class="dialog-next">▼ 點一下繼續</div>
+    </div>
+
+    <div id="quiz" class="quiz hidden">
+      <p id="quiz-question" class="quiz-question"></p>
+      <div id="quiz-options" class="quiz-options"></div>
+    </div>
+
+    <div id="captured-panel" class="captured-panel hidden">
+      <p class="captured-title">✨ 收服成功！</p>
+      <p id="captured-text"></p>
+      <a class="btn btn-primary" href="dex.html">查看我的圖鑑</a>
+    </div>
+
+    <div id="flash" class="flash"></div>
+  </div>
+
+  <!-- ===== AR 場景 =====
+       demo.mind 為 MindAR 官方範例的預編譯追蹤檔；
+       正式版換成自製圖騰編譯後的 assets/targets/dino.mind -->
+  <a-scene
+    mindar-image="imageTargetSrc: assets/targets/demo.mind;"
+    color-space="sRGB"
+    renderer="colorManagement: true"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false">
+
+    <a-camera position="0 0 0" look-controls="enabled: false"
+              cursor="fuse: false; rayOrigin: mouse;"
+              raycaster="near: 10; far: 10000; objects: .clickable"></a-camera>
+
+    <a-entity id="anchor" mindar-image-target="targetIndex: 0">
+      <!-- 精靈「小快」：以基本幾何體組裝，之後可整組換成 <a-gltf-model> -->
+      <a-entity id="spirit" scale="0 0 0" position="0 0 0.15"
+                animation__pet="property: scale; from: 1 1 1; to: 1.18 1.18 1.18; dir: alternate; loop: 2; dur: 120; easing: easeOutQuad; startEvents: petted"
+                animation__capture="property: scale; to: 0.01 0.01 0.01; dur: 900; easing: easeInBack; startEvents: capture">
+        <a-entity id="spirit-bob"
+                  animation="property: position; from: 0 0 0; to: 0 0.05 0; dir: alternate; dur: 900; loop: true; easing: easeInOutSine">
+          <!-- 身體 -->
+          <a-sphere class="clickable" color="#5aa469" radius="0.18" position="0 0.18 0" scale="1 0.9 1.15"></a-sphere>
+          <!-- 肚皮 -->
+          <a-sphere class="clickable" color="#cde8b5" radius="0.13" position="0 0.15 0.07" scale="1 0.8 1"></a-sphere>
+          <!-- 頭 -->
+          <a-sphere class="clickable" color="#6bbf7b" radius="0.115" position="0 0.4 0.09"></a-sphere>
+          <!-- 吻部 -->
+          <a-box class="clickable" color="#4e9960" width="0.09" height="0.06" depth="0.1" position="0 0.37 0.19"></a-box>
+          <!-- 眼睛 -->
+          <a-sphere color="#ffffff" radius="0.032" position="-0.055 0.43 0.17"></a-sphere>
+          <a-sphere color="#ffffff" radius="0.032" position="0.055 0.43 0.17"></a-sphere>
+          <a-sphere color="#222222" radius="0.016" position="-0.055 0.43 0.198"></a-sphere>
+          <a-sphere color="#222222" radius="0.016" position="0.055 0.43 0.198"></a-sphere>
+          <!-- 尾巴 -->
+          <a-cone class="clickable" color="#5aa469" radius-bottom="0.07" radius-top="0.005" height="0.3"
+                  position="0 0.16 -0.24" rotation="-70 0 0"></a-cone>
+          <!-- 頭頂絨毛（呼應「有羽毛」的知識點） -->
+          <a-cone color="#e8734a" radius-bottom="0.03" radius-top="0.001" height="0.09" position="0 0.5 0.06" rotation="-15 0 0"></a-cone>
+          <a-cone color="#e8734a" radius-bottom="0.025" radius-top="0.001" height="0.07" position="-0.04 0.49 0.04" rotation="-15 0 -20"></a-cone>
+          <a-cone color="#e8734a" radius-bottom="0.025" radius-top="0.001" height="0.07" position="0.04 0.49 0.04" rotation="-15 0 20"></a-cone>
+          <!-- 腳 -->
+          <a-cylinder class="clickable" color="#4e9960" radius="0.035" height="0.08" position="-0.07 0.03 0.02"></a-cylinder>
+          <a-cylinder class="clickable" color="#4e9960" radius="0.035" height="0.08" position="0.07 0.03 0.02"></a-cylinder>
+        </a-entity>
+      </a-entity>
+    </a-entity>
+  </a-scene>
+
+  <script src="js/save.js"></script>
+  <script src="js/ar-game.js"></script>
+</body>
+</html>
