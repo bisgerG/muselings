@@ -224,12 +224,14 @@
     })();
   }
 
-  // --- 側身視差：手機左右轉動時精靈保持面向「原本的世界方向」，最多 ±35° ---
+  // --- 側身視差：精靈保持面向「原本的世界方向」---
+  // 水平 360° 自由（繞著轉可以看到背面）；上下俯仰小角度跟隨（±15°，同圖鑑檢視器的感覺）。
   // 精靈釘在相機下，相機轉動不會改變相對角度，所以用 deviceorientation 感測
   // 手機朝向（與 MindAR 無關，marker 不在畫面也有效）。基準取釘選後第一筆讀值。
-  const YAW_LIMIT_DEG = 35;
-  let yawBase = null;
+  const PITCH_LIMIT_DEG = 15;
+  let yawBase = null, pitchBase = 0;
   let yawTargetRad = 0, yawCurrentRad = 0, yawDeltaDeg = 0;
+  let pitchTargetRad = 0, pitchCurrentRad = 0;
 
   const _euler = new THREE.Euler();
   const _q = new THREE.Quaternion();
@@ -255,21 +257,29 @@
     _q.setFromEuler(_euler).multiply(_qCam).multiply(_qScreen.setFromAxisAngle(_zee, -orient));
     _dir.set(0, 0, -1).applyQuaternion(_q);
     const heading = Math.atan2(-_dir.x, -_dir.z); // 相機水平朝向（逆時針為正）
-    if (yawBase === null) { yawBase = heading; return; }
+    const pitch = Math.asin(Math.max(-1, Math.min(1, _dir.y))); // 相機仰角（抬頭為正）
+    if (yawBase === null) { yawBase = heading; pitchBase = pitch; return; }
     let delta = heading - yawBase;
     delta = Math.atan2(Math.sin(delta), Math.cos(delta)); // 摺回 ±180°，跨 0°/360° 不跳
-    // 相機右轉 → 精靈相對左轉（像牠仍面向原方向），夾在 ±35°
+    // 相機右轉 → 精靈相對左轉（像牠仍面向原方向）；水平不設限，可 360° 看背面
     yawDeltaDeg = delta / D2R;
-    const clamped = Math.max(-YAW_LIMIT_DEG, Math.min(YAW_LIMIT_DEG, -yawDeltaDeg));
-    yawTargetRad = clamped * D2R;
+    yawTargetRad = -delta;
+    // 俯仰只小角度跟隨：抬頭/低頭時精靈微微對應傾斜，超過 ±15° 就停
+    const dp = pitch - pitchBase;
+    pitchTargetRad = Math.max(-PITCH_LIMIT_DEG * D2R, Math.min(PITCH_LIMIT_DEG * D2R, -dp));
   }
   window.addEventListener('deviceorientation', onDeviceOrientation);
 
-  // 平滑收斂（也吃掉感測雜訊與 clamp 撞牆的跳動）；scale 動畫不碰 rotation，不衝突
+  // 平滑收斂（也吃掉感測雜訊與 clamp 撞牆的跳動）；scale 動畫不碰 rotation，不衝突。
+  // yaw 走最短路徑收斂，跨 ±180° 時不會反方向繞遠路。
   setInterval(() => {
     if (!pinApplied) return;
-    yawCurrentRad += (yawTargetRad - yawCurrentRad) * 0.18;
-    spirit.object3D.rotation.y = yawCurrentRad;
+    let dy = yawTargetRad - yawCurrentRad;
+    dy = Math.atan2(Math.sin(dy), Math.cos(dy));
+    yawCurrentRad += dy * 0.18;
+    pitchCurrentRad += (pitchTargetRad - pitchCurrentRad) * 0.18;
+    // Euler 預設 XYZ = 先繞 Y 轉身、再繞相機 X 俯仰 → 俯仰永遠相對玩家視角
+    spirit.object3D.rotation.set(pitchCurrentRad, yawCurrentRad, 0);
   }, 33);
 
   // iOS 13+ 的感測權限要在「使用者手勢」中請求，而且 Safari 在不算手勢的呼叫
