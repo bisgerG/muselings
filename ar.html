@@ -8,7 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/aframe-extras@7.5.4/dist/aframe-extras.min.js"></script>
   <!-- ?v= 版本參數：每次改版遞增，避免 GitHub Pages 快取讓新 HTML 配到舊 JS/CSS -->
-  <link rel="stylesheet" href="css/style.css?v=5">
+  <link rel="stylesheet" href="css/style.css?v=6">
 </head>
 <body class="ar-body">
 
@@ -76,9 +76,11 @@
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false">
 
+    <!-- far 必須涵蓋 MindAR 像素尺度的釘選距離（d=3×錨點縮放，實機可達數千）——
+         設 1000 會讓點擊射線搆不到精靈的命中球 -->
     <a-camera position="0 0 0" look-controls="enabled: false"
               cursor="fuse: false; rayOrigin: mouse;"
-              raycaster="near: 0.01; far: 1000; objects: .clickable"></a-camera>
+              raycaster="near: 0.01; far: 100000; objects: .clickable"></a-camera>
 
     <a-entity id="anchor" mindar-image-target="targetIndex: 0">
       <!-- 精靈「小茜」：Draco 壓縮的赤狐模型（834KB），idle 動畫由 animation-mixer 播放。
@@ -98,7 +100,7 @@
     </a-entity>
   </a-scene>
 
-  <script src="js/save.js?v=5"></script>
-  <script src="js/ar-game.js?v=5"></script>
+  <script src="js/save.js?v=6"></script>
+  <script src="js/ar-game.js?v=6"></script>
 </body>
 </html>

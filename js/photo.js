@@ -103,10 +103,21 @@
   }
 
   // --- 旋轉／縮放狀態（同圖鑑規格：左右自由、上下 65~95 度） ---
+  // 縮放不動 orbit 距離：拉近會讓模型投影超出 model-viewer 畫布被裁切
+  // （看起來像撞到隱形邊界）。改用 CSS scale 縮放整個 pet-holder，
+  // 模型永遠以固定構圖渲染在畫布內，怎麼放大都不會被切。
   const PHI_MIN = 65, PHI_MAX = 95;
-  let theta = -90, phi = 80, radius = 105; // radius 單位：%
+  const RADIUS = 105; // orbit 距離固定（%）
+  let theta = -90, phi = 80;
   function applyOrbit() {
-    mv.cameraOrbit = theta + 'deg ' + phi + 'deg ' + radius + '%';
+    mv.cameraOrbit = theta + 'deg ' + phi + 'deg ' + RADIUS + '%';
+  }
+
+  let holderScale = 1;
+  let holderX = 0, holderY = 0;
+  function applyHolderTransform() {
+    holder.style.transform =
+      'translate(' + holderX + 'px, ' + holderY + 'px) scale(' + holderScale + ')';
   }
 
   // --- 手勢仲裁（先綁；hitsPet 在元件升級前一律當作未命中 → 旋轉模式） ---
@@ -119,8 +130,8 @@
   const pointers = new Map();
   let mode = null; // 'move' | 'rotate' | 'pinch'
   let startX = 0, startY = 0, startTheta = 0, startPhi = 0;
-  let holderX = 0, holderY = 0, startHX = 0, startHY = 0;
-  let pinchStartDist = 0, pinchStartRadius = 0;
+  let startHX = 0, startHY = 0;
+  let pinchStartDist = 0, pinchStartScale = 1;
 
   function pinchDist() {
     let a = null, b = null;
@@ -129,11 +140,12 @@
   }
 
   gestureLayer.addEventListener('pointerdown', (e) => {
-    gestureLayer.setPointerCapture(e.pointerId);
+    // 合成事件（自動化測試）沒有 active pointer，capture 會丟 NotFoundError → 忽略
+    try { gestureLayer.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pointers.size === 2) {
       pinchStartDist = pinchDist();
-      pinchStartRadius = radius;
+      pinchStartScale = holderScale;
       mode = 'pinch';
     } else if (pointers.size === 1) {
       mode = hitsPet(e.clientX, e.clientY) ? 'move' : 'rotate';
@@ -148,12 +160,12 @@
     if (!pt) return;
     pt.x = e.clientX; pt.y = e.clientY; // 就地更新，避免熱路徑每事件配置新物件
     if (mode === 'pinch' && pointers.size === 2) {
-      radius = clamp(pinchStartRadius * pinchStartDist / pinchDist(), 60, 220); // 手指張開 → 變大
-      applyOrbit();
+      holderScale = clamp(pinchStartScale * pinchDist() / pinchStartDist, 0.5, 2.6); // 手指張開 → 變大
+      applyHolderTransform();
     } else if (mode === 'move') {
       holderX = startHX + (e.clientX - startX);
       holderY = startHY + (e.clientY - startY);
-      holder.style.transform = 'translate(' + holderX + 'px, ' + holderY + 'px)';
+      applyHolderTransform();
     } else if (mode === 'rotate') {
       theta = startTheta - (e.clientX - startX) * 0.35;
       phi = clamp(startPhi - (e.clientY - startY) * 0.2, PHI_MIN, PHI_MAX);

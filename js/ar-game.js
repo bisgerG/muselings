@@ -70,7 +70,8 @@
         '\npos=' + o.position.toArray().map(v => +v.toFixed(1)).join(',') +
         ' scale=' + (+o.scale.x.toFixed(2)) +
         '\nmesh=' + (mesh ? 'loaded' : 'NOT-LOADED') +
-        ' anchorS=' + (anchorScale() ? anchorScale().toFixed(1) : 'null');
+        ' anchorS=' + (anchorScale() ? anchorScale().toFixed(1) : 'null') +
+        '\nyawΔ=' + yawDeltaDeg.toFixed(1) + '° spiritYaw=' + (spirit.object3D.rotation.y / (Math.PI / 180)).toFixed(1) + '°';
     } catch (e) { status = 'status err: ' + e.message; }
     debugEl.textContent = status + '\n---\n' + debugLines.join('\n');
   }
@@ -220,6 +221,56 @@
       }
       setTimeout(poll, 66); // 用時間基準而非幀數：背景/節流分頁也不會拖慢逾時
     })();
+  }
+
+  // --- 側身視差：手機左右轉動時精靈保持面向「原本的世界方向」，最多 ±35° ---
+  // 精靈釘在相機下，相機轉動不會改變相對角度，所以用 deviceorientation 感測
+  // 手機朝向（與 MindAR 無關，marker 不在畫面也有效）。基準取釘選後第一筆讀值。
+  const YAW_LIMIT_DEG = 35;
+  let yawBase = null;
+  let yawTargetRad = 0, yawCurrentRad = 0, yawDeltaDeg = 0;
+
+  const _euler = new THREE.Euler();
+  const _q = new THREE.Quaternion();
+  const _qCam = new THREE.Quaternion(-Math.SQRT1_2, 0, 0, Math.SQRT1_2); // 相機朝機背而非螢幕頂
+  const _qScreen = new THREE.Quaternion();
+  const _zee = new THREE.Vector3(0, 0, 1);
+  const _dir = new THREE.Vector3();
+  const D2R = Math.PI / 180;
+
+  function onDeviceOrientation(ev) {
+    if (!pinApplied || ev.alpha == null || ev.beta == null || ev.gamma == null) return;
+    // 標準 deviceorientation → three.js 相機四元數（含螢幕方向補償）
+    const orient = ((screen.orientation && screen.orientation.angle) || window.orientation || 0) * D2R;
+    _euler.set(ev.beta * D2R, ev.alpha * D2R, -ev.gamma * D2R, 'YXZ');
+    _q.setFromEuler(_euler).multiply(_qCam).multiply(_qScreen.setFromAxisAngle(_zee, -orient));
+    _dir.set(0, 0, -1).applyQuaternion(_q);
+    const heading = Math.atan2(-_dir.x, -_dir.z); // 相機水平朝向（逆時針為正）
+    if (yawBase === null) { yawBase = heading; return; }
+    let delta = heading - yawBase;
+    delta = Math.atan2(Math.sin(delta), Math.cos(delta)); // 摺回 ±180°，跨 0°/360° 不跳
+    // 相機右轉 → 精靈相對左轉（像牠仍面向原方向），夾在 ±35°
+    yawDeltaDeg = delta / D2R;
+    const clamped = Math.max(-YAW_LIMIT_DEG, Math.min(YAW_LIMIT_DEG, -yawDeltaDeg));
+    yawTargetRad = clamped * D2R;
+  }
+  window.addEventListener('deviceorientation', onDeviceOrientation);
+
+  // 平滑收斂（也吃掉感測雜訊與 clamp 撞牆的跳動）；scale 動畫不碰 rotation，不衝突
+  setInterval(() => {
+    if (!pinApplied) return;
+    yawCurrentRad += (yawTargetRad - yawCurrentRad) * 0.18;
+    spirit.object3D.rotation.y = yawCurrentRad;
+  }, 33);
+
+  // iOS 13+ 的感測權限要在使用者手勢中請求：掛在第一次點擊（點對話框就會觸發），
+  // 拿不到就靜默停用（精靈維持正面，其餘功能不受影響）
+  if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') {
+    const askOrientationPermission = () => {
+      document.body.removeEventListener('click', askOrientationPermission);
+      DeviceOrientationEvent.requestPermission().catch(() => {});
+    };
+    document.body.addEventListener('click', askOrientationPermission);
   }
 
   // --- 模型動畫剪輯（名稱用萬用字元比對 GLB 內的 clip） ---

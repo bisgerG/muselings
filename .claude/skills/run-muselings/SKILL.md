@@ -126,7 +126,9 @@ const anchor = document.getElementById('anchor');
 const s = document.getElementById('spirit');
 anchor.emit('targetFound');
 // → s.object3D.parent === document.querySelector('a-camera').object3D
-// → s.object3D.position ≈ (0, -0.45, -1.6), quaternion identity (w=1)
+// → headless (no anchor matrix) takes the fallback pin after ~1.5s:
+//   position ≈ (0, -1, -3), quaternion identity; ?debug overlay logs
+//   pin(fallback near=...) vs pin(anchor S=...) to show which path ran
 anchor.emit('targetLost');   // → no change; spirit stays pinned
 ```
 
@@ -197,3 +199,25 @@ No automated test suite exists in this repo (no `package.json` at root, no
   session on this Chrome profile (this repo's dex already had one fox
   logged before this session started) — call `MuselingSave.reset()` first
   if you need a clean-slate test.
+- **`javascript_tool` runs in an isolated world.** DOM reads/writes work, but
+  `window.dispatchEvent(...)` from it does NOT reach page-world listeners
+  (e.g. ar-game's `deviceorientation` handler). To fire page-world events,
+  inject an inline `<script>`:
+  `const s=document.createElement('script'); s.textContent='window.dispatchEvent(new DeviceOrientationEvent("deviceorientation",{alpha:200,beta:90,gamma:0}))'; document.body.appendChild(s); s.remove();`
+  Same trick for synthetic `PointerEvent`s on `#gesture-layer` in photo.html.
+- **Background-tab timer throttling stalls the verification loop** — the
+  parallax smoothing interval and the `?debug` overlay refresh both run on
+  `setInterval`, so with the driven tab unfocused the overlay/rotation can
+  look frozen for many seconds after an event. Judge by the values
+  eventually converging, not by immediate reads. (Real devices run the page
+  foreground — unaffected.)
+- **Parallax yaw is testable headless** with synthetic `deviceorientation`
+  events (`beta:90, gamma:0` = portrait upright; vary `alpha`). After
+  `targetFound`+pin, the first event sets the baseline; later events rotate
+  `#spirit` (clamped ±35°). Watch `yawΔ`/`spiritYaw` on the `?debug` overlay.
+- **model-viewer's `camera-orbit` HTML attribute never updates** — photo.js
+  sets the `cameraOrbit` property; read `mv.cameraOrbit` (page world) or
+  `mv.getCameraOrbit()`, not `getAttribute('camera-orbit')`.
+- **Chrome may serve a stale cached JS even after editing the file** when the
+  `?v=` value didn't change between loads — confirm with
+  `fetch('js/photo.js?v=N', {cache:'reload'})` then re-navigate.
