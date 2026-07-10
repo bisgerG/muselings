@@ -85,13 +85,17 @@
                 animation__capture="property: scale; to: 0.01 0.01 0.01; dur: 900; easing: easeInBack; startEvents: capture">
         <!-- Marker 以直式（原圖轉 90°）顯示，此層補償錨點座標的旋轉；若狐狸方向顛倒，把 z 改為 -90 -->
         <a-entity id="spirit-orient" rotation="0 0 90">
-          <a-gltf-model id="spirit-model"
-                        src="assets/models/red_fox.glb"
-                        scale="0.6 0.6 0.6" position="0 0 0" rotation="0 65 0"
-                        animation-mixer="clip: *smell*; crossFadeDuration: 0.25"></a-gltf-model>
-          <!-- 隱形命中球：兒童手指點到狐狸附近就算，繞開 SkinnedMesh 射線檢測的不可靠 -->
-          <a-sphere class="clickable" radius="0.5" position="0 0.35 0"
-                    material="transparent: true; opacity: 0"></a-sphere>
+          <!-- yaw 層：face-camera 元件（ar-game.js 掛載）讓狐狸繞直立軸面向鏡頭 -->
+          <a-entity id="spirit-yaw">
+            <!-- rotation y90 = 模型正面朝 +Z，朝向交給 face-camera 控制 -->
+            <a-gltf-model id="spirit-model"
+                          src="assets/models/red_fox.glb"
+                          scale="0.6 0.6 0.6" position="0 0 0" rotation="0 90 0"
+                          animation-mixer="clip: *smell*; crossFadeDuration: 0.25"></a-gltf-model>
+            <!-- 隱形命中球：兒童手指點到狐狸附近就算，繞開 SkinnedMesh 射線檢測的不可靠 -->
+            <a-sphere class="clickable" radius="0.5" position="0 0.35 0"
+                      material="transparent: true; opacity: 0"></a-sphere>
+          </a-entity>
         </a-entity>
       </a-entity>
     </a-entity>

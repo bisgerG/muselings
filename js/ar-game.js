@@ -4,6 +4,53 @@
  * → quiz（收服考驗）→ captured（收錄圖鑑）
  */
 (async function () {
+  const THREE = window.AFRAME.THREE;
+
+  // ===== 自訂 A-Frame 元件（須在掛載到實體前註冊） =====
+
+  // 只繞自身直立軸緩慢面向相機，帶少許側身角度；收到 'snapface' 事件時瞬間對正（初次登場用）
+  AFRAME.registerComponent('face-camera', {
+    schema: { offsetDeg: { default: -20 }, lerp: { default: 0.07 } },
+    init: function () {
+      this.camPos = new THREE.Vector3();
+      this.selfPos = new THREE.Vector3();
+      this.parentQuat = new THREE.Quaternion();
+      this.snap = false;
+      this.el.addEventListener('snapface', () => { this.snap = true; });
+    },
+    tick: function () {
+      const cam = this.el.sceneEl.camera;
+      if (!cam) return;
+      const obj = this.el.object3D;
+      cam.getWorldPosition(this.camPos);
+      obj.getWorldPosition(this.selfPos);
+      const dir = this.camPos.sub(this.selfPos);
+      obj.parent.getWorldQuaternion(this.parentQuat).invert();
+      dir.applyQuaternion(this.parentQuat);
+      const target = Math.atan2(dir.x, dir.z) + THREE.MathUtils.degToRad(this.data.offsetDeg);
+      let delta = target - obj.rotation.y;
+      delta = Math.atan2(Math.sin(delta), Math.cos(delta));
+      obj.rotation.y += delta * (this.snap ? 1 : this.data.lerp);
+      this.snap = false;
+    }
+  });
+
+  // Marker 跟丟後，精靈平滑漂到相機前方的固定位置，任務流程不中斷
+  AFRAME.registerComponent('float-drift', {
+    init: function () {
+      this.active = false;
+      this.targetPos = new THREE.Vector3(0, -0.35, -1.4);
+      // Rz(-90) 抵銷 spirit-orient 的 Rz(90)，讓狐狸在相機座標中站直
+      this.targetQuat = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, -Math.PI / 2));
+    },
+    tick: function () {
+      if (!this.active) return;
+      const o = this.el.object3D;
+      o.position.lerp(this.targetPos, 0.06);
+      o.quaternion.slerp(this.targetQuat, 0.06);
+    }
+  });
+
   const data = await fetch('data/scripts/red_fox.json').then(r => r.json());
 
   // --- DOM ---
@@ -23,7 +70,22 @@
   const anchor = document.getElementById('anchor');
   const spirit = document.getElementById('spirit');
   const spiritModel = document.getElementById('spirit-model');
+  const spiritYaw = document.getElementById('spirit-yaw');
   const sceneEl = document.querySelector('a-scene');
+
+  // 掛載自訂元件（元件已於上方註冊）
+  spiritYaw.setAttribute('face-camera', '');
+  spirit.setAttribute('float-drift', '');
+
+  // --- 脫錨漂浮：觸發後跟丟 Marker，精靈改掛到相機下，留在畫面上 ---
+  let floating = false;
+  function floatToCamera() {
+    if (floating || state === 'scanning' || state === 'captured') return;
+    floating = true;
+    const camObj = document.querySelector('a-camera').object3D;
+    camObj.attach(spirit.object3D); // 保留當下世界座標，再由 float-drift 平滑漂到定位
+    spirit.components['float-drift'].active = true;
+  }
   const loadingLayerEl = document.getElementById('loading-layer');
   const scanLayerEl = document.getElementById('scan-layer');
 
@@ -124,6 +186,7 @@
   function startIntro() {
     state = 'intro';
     setHint('');
+    spiritYaw.emit('snapface'); // 初次登場必定正面（帶側身角度）
     spirit.setAttribute('animation__in', 'property: scale; to: 1 1 1; dur: 700; easing: easeOutBack');
     showDialog(data.intro, startPetPhase);
   }
@@ -204,11 +267,11 @@
   });
 
   anchor.addEventListener('targetLost', () => {
-    if (state !== 'captured') {
+    if (state === 'scanning') {
       scanLayerEl.classList.remove('off');
-      if (state !== 'scanning') {
-        setHint('裂縫的訊號變弱了……把鏡頭對回圖騰！');
-      }
+    } else if (state !== 'captured') {
+      // 觸發後跟丟 Marker：精靈漂到鏡頭前，任務繼續，不逼玩家停在原地
+      floatToCamera();
     }
   });
 

@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>互動圖鑑｜時空守護者</title>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="page">
@@ -25,9 +26,19 @@
     // 圖鑑總表：正式版由 data/muselings.json 驅動，MVP 先內嵌
     const MUSELINGS = [
       { id: 'red_fox', name: '小茜', species: '赤狐', zone: '哺乳動物區', emoji: '🦊',
+        model: 'assets/models/red_fox.glb',
         facts: ['大尾巴用來保暖和保持平衡', '聽力極佳，能聽見雪下老鼠的聲音', '雜食性：老鼠、昆蟲、漿果都吃'] },
       { id: 'raptor_kid', name: '？？？', species: '？？？', zone: '恐龍廳', emoji: '🦖', facts: [], comingSoon: true }
     ];
+
+    // 3D 檢視器：預設正面，左右自由旋轉，上下限制在小角度內（65°~95° 仰角）
+    function viewerHtml(m) {
+      return '<model-viewer class="dex-viewer" src="' + m.model + '"' +
+        ' camera-controls disable-pan autoplay interaction-prompt="none"' +
+        ' camera-orbit="-90deg 80deg 110%"' +
+        ' min-camera-orbit="-Infinity 65deg auto" max-camera-orbit="Infinity 95deg auto">' +
+        '</model-viewer>';
+    }
 
     const save = MuselingSave.load();
     const listEl = document.getElementById('dex-list');
@@ -42,7 +53,7 @@
       card.className = 'dex-card' + (unlocked ? '' : ' locked');
       if (unlocked) {
         card.innerHTML =
-          '<div class="dex-emoji">' + m.emoji + '</div>' +
+          (m.model ? viewerHtml(m) : '<div class="dex-emoji">' + m.emoji + '</div>') +
           '<h3>' + m.name + '</h3>' +
           '<p class="dex-species">' + m.species + '｜' + m.zone + '</p>' +
           '<p class="dex-hearts">羈絆：' + '❤️'.repeat(entry.affinity || 0) + '</p>' +
