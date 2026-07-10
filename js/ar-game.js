@@ -42,6 +42,40 @@
     return (tpl || '').replace(/\{(\w+)\}/g, (m, k) => (vars && vars[k] != null) ? vars[k] : m);
   }
 
+  // --- ?debug 除錯疊層：手機上直接看關鍵數值（螢幕左上角） ---
+  let debugEl = null;
+  let debugLines = [];
+  if (location.search.indexOf('debug') !== -1) {
+    debugEl = document.createElement('pre');
+    debugEl.style.cssText = 'position:fixed;top:60px;left:8px;z-index:999;margin:0;' +
+      'padding:6px 8px;max-width:92vw;overflow:hidden;font-size:10px;line-height:1.5;' +
+      'background:rgba(0,0,0,.7);color:#7fd1ae;pointer-events:none;white-space:pre-wrap;';
+    document.body.appendChild(debugEl);
+  }
+  function debugLog(msg) {
+    console.log('[ar-debug] ' + msg);
+    if (!debugEl) return;
+    debugLines.push(msg);
+    if (debugLines.length > 6) debugLines.shift();
+    renderDebug();
+  }
+  function renderDebug() {
+    if (!debugEl) return;
+    let status = '';
+    try {
+      const o = spirit.object3D;
+      const mesh = spiritModel.getObject3D('mesh');
+      status = 'state=' + state + ' pinned=' + pinApplied +
+        ' parent=' + (o.parent === cameraEl.object3D ? 'camera' : (o.parent === anchor.object3D ? 'anchor' : 'other')) +
+        '\npos=' + o.position.toArray().map(v => +v.toFixed(1)).join(',') +
+        ' scale=' + (+o.scale.x.toFixed(2)) +
+        '\nmesh=' + (mesh ? 'loaded' : 'NOT-LOADED') +
+        ' anchorS=' + (anchorScale() ? anchorScale().toFixed(1) : 'null');
+    } catch (e) { status = 'status err: ' + e.message; }
+    debugEl.textContent = status + '\n---\n' + debugLines.join('\n');
+  }
+  if (debugEl) setInterval(renderDebug, 500);
+
   // --- 自製時光羅盤 UI：AR 引擎就緒後收起載入層、亮起尋標環 ---
   // 監聽必須在任何 await 之前註冊，避免錯過 MindAR 的事件
   let fatalLoadError = false;
@@ -109,48 +143,84 @@
   }
 
   // --- 釘到畫面中央 ---
-  // 掃描到的瞬間把精靈改掛到相機下：完全螢幕空間穩定、正面朝向玩家（無俯仰角）。
+  // 掃描到後把精靈改掛到相機下：完全螢幕空間穩定、正面朝向玩家（無俯仰角）。
   //
   // 重要：MindAR 的世界單位是「marker 影像的像素尺度」——錨點矩陣帶著數百倍的
   // 縮放、投影矩陣的近裁剪面也在那個尺度。所以釘選的距離/大小不能寫死，
-  // 必須在掃到當下從錨點矩陣取縮放（S）、從投影矩陣取 cot(fov/2)，
-  // 反推出「精靈高度固定佔畫面 45%」所需的 scale——與裝置 FOV、marker 尺寸無關。
+  // 要從錨點矩陣取縮放（S）、從投影矩陣取 cot(fov/2)，反推「精靈高度固定佔
+  // 畫面 45%」所需的 scale——與裝置 FOV、marker 尺寸無關。
+  //
+  // 而且 MindAR 可能在寫入錨點矩陣「之前」就發出 targetFound（首幀矩陣仍是
+  // 零矩陣，同步去讀會拿到退化值）——所以用 rAF 輪詢等矩陣有效再計算；
+  // 等不到就用投影矩陣的近裁剪面反推安全距離保底。
   const THREE = window.AFRAME.THREE;
   const SCREEN_HEIGHT_FRACTION = 0.45; // 精靈佔畫面高度比例
   const Y_OFFSET_FRACTION = 0.20;      // 腳掌位置：畫面中心往下 20%
-  let pinScale = 1;                    // 釘選當下算出的目標縮放，動畫都以它為基準
+  let pinScale = 1;                    // 釘選算出的目標縮放，scale 動畫都以它為基準
+  let pinApplied = false;
 
-  function pinToCamera() {
-    const o = spirit.object3D;
+  function v3(s) { return s + ' ' + s + ' ' + s; }
+
+  function projInfo() {
+    const cam3 = sceneEl.camera;
+    const e = (cam3 && cam3.projectionMatrix) ? cam3.projectionMatrix.elements : null;
+    let invTan = e ? e[5] : 0;                       // cot(fovY/2)
+    if (!isFinite(invTan) || invTan <= 0) invTan = 1.19;
+    let near = e ? e[14] / (e[10] - 1) : 0;          // 由透視矩陣反解 near
+    if (!isFinite(near) || near <= 0) near = 0.05;
+    return { invTan: invTan, near: near };
+  }
+
+  function anchorScale() {
     const p = new THREE.Vector3(), q = new THREE.Quaternion(), sv = new THREE.Vector3();
     anchor.object3D.updateWorldMatrix(true, false);
     anchor.object3D.matrixWorld.decompose(p, q, sv);
-    let S = (Math.abs(sv.x) + Math.abs(sv.y) + Math.abs(sv.z)) / 3; // MindAR 錨點縮放
-    if (!isFinite(S) || S < 1e-6) S = 1;                            // 無 MindAR（測試）時退回 1
-    const d = 3 * S; // 固定放在「3 個 marker 寬」的距離，透視感自然且遠離近裁剪面
+    const S = (Math.abs(sv.x) + Math.abs(sv.y) + Math.abs(sv.z)) / 3;
+    return (isFinite(S) && S > 1e-6) ? S : null;     // 零矩陣（尚未追蹤）→ null
+  }
 
-    const cam3 = sceneEl.camera;
-    let invTan = (cam3 && cam3.projectionMatrix) ? cam3.projectionMatrix.elements[5] : 0;
-    if (!isFinite(invTan) || invTan <= 0) invTan = 1.19; // cot(40°)＝FOV 80 的預設值
+  function applyPin(d, source) {
+    const proj = projInfo();
+    const modelHeight = entry.arHeight || 0.5;       // 模型在 spirit 座標系的身高（總表可調）
+    pinScale = (SCREEN_HEIGHT_FRACTION * 2 * d) / (proj.invTan * modelHeight);
 
-    const modelHeight = entry.arHeight || 0.5; // 模型在 spirit 座標系的身高（總表可調）
-    pinScale = (SCREEN_HEIGHT_FRACTION * 2 * d) / (invTan * modelHeight);
-
+    const o = spirit.object3D;
     cameraEl.object3D.add(o);
-    o.position.set(0, -(Y_OFFSET_FRACTION * 2 * d) / invTan, -d);
+    o.position.set(0, -(Y_OFFSET_FRACTION * 2 * d) / proj.invTan, -d);
     o.quaternion.identity();
 
-    // scale 動畫走 A-Frame 屬性系統，全部以 pinScale 為基準重設
-    spirit.setAttribute('scale', '0 0 0'); // 從 0 長出（animation__in 在 startIntro 觸發）
+    // scale 動畫走 A-Frame 屬性系統，全部以 pinScale 為基準重設；
+    // animation__in 立即觸發（沒有 startEvents），精靈從 0 長出
+    spirit.setAttribute('scale', '0 0 0');
     spirit.setAttribute('animation__pet',
       'property: scale; from: ' + v3(pinScale) + '; to: ' + v3(pinScale * 1.12) +
       '; dir: alternate; loop: 2; dur: 120; easing: easeOutQuad; startEvents: petted');
     spirit.setAttribute('animation__capture',
       'property: scale; to: ' + v3(pinScale * 0.01) +
       '; dur: 900; easing: easeInBack; startEvents: capture');
+    spirit.setAttribute('animation__in',
+      'property: scale; from: 0 0 0; to: ' + v3(pinScale) + '; dur: 700; easing: easeOutBack');
+
+    pinApplied = true;
+    debugLog('pin(' + source + ') d=' + d.toFixed(1) + ' s=' + pinScale.toFixed(2) +
+      ' invTan=' + proj.invTan.toFixed(3) + ' near=' + proj.near.toFixed(3));
   }
 
-  function v3(s) { return s + ' ' + s + ' ' + s; }
+  function pinWhenReady() {
+    if (pinApplied) return;
+    const started = performance.now();
+    (function poll() {
+      if (pinApplied) return;
+      const S = anchorScale();
+      if (S) { applyPin(3 * S, 'anchor S=' + S.toFixed(1)); return; }
+      if (performance.now() - started > 1500) { // 等不到有效矩陣 → 近裁剪面倍數保底
+        const near = projInfo().near;
+        applyPin(Math.max(60 * near, 3), 'fallback near=' + near.toFixed(3));
+        return;
+      }
+      setTimeout(poll, 66); // 用時間基準而非幀數：背景/節流分頁也不會拖慢逾時
+    })();
+  }
 
   // --- 模型動畫剪輯（名稱用萬用字元比對 GLB 內的 clip） ---
   const CLIP_IDLE = '*smell*';
@@ -171,6 +241,10 @@
   spiritModel.addEventListener('animation-finished', () => {
     if (state !== 'captured') playIdle();
   });
+
+  spiritModel.addEventListener('model-loaded', () => debugLog('model-loaded'));
+  spiritModel.addEventListener('model-error', e =>
+    debugLog('MODEL-ERROR: ' + ((e.detail && e.detail.src) || '')));
 
   // --- 狀態 ---
   let state = 'scanning';
@@ -234,8 +308,7 @@
   function startIntro() {
     state = 'intro';
     setHint('');
-    spirit.setAttribute('animation__in',
-      'property: scale; from: 0 0 0; to: ' + v3(pinScale) + '; dur: 700; easing: easeOutBack');
+    // 登場縮放動畫（animation__in）由 applyPin 設定——釘選定位好才長出來
     showDialog(data.intro, startPetPhase);
   }
 
@@ -328,7 +401,7 @@
   function onTargetFound() {
     scanLayerEl.classList.add('off');
     if (state !== 'scanning') return;
-    pinToCamera();
+    pinWhenReady(); // 等錨點矩陣有效後把精靈釘到畫面中央（對話先開始，不互等）
     startIntro();
   }
 
