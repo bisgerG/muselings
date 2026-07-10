@@ -71,7 +71,8 @@
         ' scale=' + (+o.scale.x.toFixed(2)) +
         '\nmesh=' + (mesh ? 'loaded' : 'NOT-LOADED') +
         ' anchorS=' + (anchorScale() ? anchorScale().toFixed(1) : 'null') +
-        '\nyawΔ=' + yawDeltaDeg.toFixed(1) + '° spiritYaw=' + (spirit.object3D.rotation.y / (Math.PI / 180)).toFixed(1) + '°';
+        '\nDO=' + doStatus + '(' + doCount + ') yawΔ=' + yawDeltaDeg.toFixed(1) +
+        '° spiritYaw=' + (spirit.object3D.rotation.y / (Math.PI / 180)).toFixed(1) + '°';
     } catch (e) { status = 'status err: ' + e.message; }
     debugEl.textContent = status + '\n---\n' + debugLines.join('\n');
   }
@@ -238,8 +239,16 @@
   const _dir = new THREE.Vector3();
   const D2R = Math.PI / 180;
 
+  // 感測器自我診斷（?debug 疊層顯示）：waiting=還沒收到事件、null-data=有事件
+  // 但沒資料（桌機/權限未給）、ok=正常、need-perm/perm:*=iOS 權限流程
+  let doStatus = 'waiting';
+  let doCount = 0;
+
   function onDeviceOrientation(ev) {
-    if (!pinApplied || ev.alpha == null || ev.beta == null || ev.gamma == null) return;
+    doCount++;
+    if (ev.alpha == null || ev.beta == null || ev.gamma == null) { doStatus = 'null-data'; return; }
+    if (doStatus !== 'ok') { doStatus = 'ok'; debugLog('DO ok α=' + ev.alpha.toFixed(0)); }
+    if (!pinApplied) return;
     // 標準 deviceorientation → three.js 相機四元數（含螢幕方向補償）
     const orient = ((screen.orientation && screen.orientation.angle) || window.orientation || 0) * D2R;
     _euler.set(ev.beta * D2R, ev.alpha * D2R, -ev.gamma * D2R, 'YXZ');
@@ -263,14 +272,23 @@
     spirit.object3D.rotation.y = yawCurrentRad;
   }, 33);
 
-  // iOS 13+ 的感測權限要在使用者手勢中請求：掛在第一次點擊（點對話框就會觸發），
+  // iOS 13+ 的感測權限要在使用者手勢中請求。同時掛 click 與 touchend：
+  // iOS Safari 對沒有 click handler 的區域不一定合成 click 事件，touchend 一定有。
   // 拿不到就靜默停用（精靈維持正面，其餘功能不受影響）
   if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') {
+    doStatus = 'need-perm';
+    let asked = false;
     const askOrientationPermission = () => {
+      if (asked) return;
+      asked = true;
       document.body.removeEventListener('click', askOrientationPermission);
-      DeviceOrientationEvent.requestPermission().catch(() => {});
+      document.body.removeEventListener('touchend', askOrientationPermission);
+      DeviceOrientationEvent.requestPermission()
+        .then(res => { doStatus = 'perm:' + res; debugLog('DO permission: ' + res); })
+        .catch(e => { doStatus = 'perm-err'; debugLog('DO perm err: ' + e.message); });
     };
     document.body.addEventListener('click', askOrientationPermission);
+    document.body.addEventListener('touchend', askOrientationPermission);
   }
 
   // --- 模型動畫剪輯（名稱用萬用字元比對 GLB 內的 clip） ---
