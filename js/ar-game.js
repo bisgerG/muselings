@@ -5,97 +5,12 @@
  *
  * 精靈與文案由 data/muselings.json 總表驅動：
  * ar.html?spirit=<id>（預設 defaultSpirit），劇情內容在各精靈的 script JSON。
+ *
+ * 呈現方式：Marker 只當「觸發器」——掃描到的瞬間，精靈就從 marker 錨點
+ * 改掛到相機下、釘在畫面中央正面朝向玩家（無俯仰角）。之後不管 marker
+ * 是否還在畫面裡、相機怎麼移動，精靈都穩定置中，直到收服縮小消失。
  */
 (async function () {
-  const THREE = window.AFRAME.THREE;
-
-  // ===== 自訂 A-Frame 元件（須在掛載到實體前註冊） =====
-
-  // 完整直立 billboard：以「螢幕上方」為上、面向相機（帶少許側身角度）。
-  // 不管 Marker 平放、貼牆或旋轉，狐狸在畫面裡永遠站正。
-  // 收到 'snapface' 事件時瞬間對正（初次登場用）。
-  AFRAME.registerComponent('face-camera', {
-    schema: { offsetDeg: { default: -20 }, lerp: { default: 0.08 } },
-    init: function () {
-      this.camPos = new THREE.Vector3();
-      this.selfPos = new THREE.Vector3();
-      this.camQuat = new THREE.Quaternion();
-      this.parentQuat = new THREE.Quaternion();
-      this.up = new THREE.Vector3();
-      this.fwd = new THREE.Vector3();
-      this.right = new THREE.Vector3();
-      this.basis = new THREE.Matrix4();
-      this.desired = new THREE.Quaternion();
-      this.offsetQuat = new THREE.Quaternion();
-      this.snap = false;
-      this.el.addEventListener('snapface', () => { this.snap = true; });
-    },
-    tick: function () {
-      const cam = this.el.sceneEl.camera;
-      if (!cam) return;
-      const obj = this.el.object3D;
-      cam.getWorldPosition(this.camPos);
-      cam.getWorldQuaternion(this.camQuat);
-      obj.getWorldPosition(this.selfPos);
-      this.up.set(0, 1, 0).applyQuaternion(this.camQuat);          // 螢幕的上方向
-      this.fwd.copy(this.camPos).sub(this.selfPos);                // 指向相機
-      this.fwd.addScaledVector(this.up, -this.fwd.dot(this.up));   // 投影到水平面（保持站直）
-      if (this.fwd.lengthSq() < 1e-6) return;
-      this.fwd.normalize();
-      this.right.crossVectors(this.up, this.fwd).normalize();
-      this.basis.makeBasis(this.right, this.up, this.fwd);         // +Z 朝相機
-      this.desired.setFromRotationMatrix(this.basis);
-      this.offsetQuat.setFromAxisAngle(this.up, THREE.MathUtils.degToRad(this.data.offsetDeg));
-      this.desired.premultiply(this.offsetQuat);                   // 繞直立軸加側身角
-      obj.parent.getWorldQuaternion(this.parentQuat).invert();
-      this.desired.premultiply(this.parentQuat);                   // 世界 → 父層局部
-      obj.quaternion.slerp(this.desired, this.snap ? 1 : this.data.lerp);
-      this.snap = false;
-    }
-  });
-
-  // 跟丟 Marker 後的漂移：兩種模式
-  //  'camera' — 精靈掛到相機下，維持「跟丟當下的距離」（夾在安全範圍內）只把構圖
-  //             移回畫面中下方；距離不變就不會有 zoom-in 感。scale 同步收斂回 1，
-  //             洗掉 attach 時從 Marker 端帶過來的世界縮放。
-  //  'anchor' — 重新掃到 Marker 後掛回錨點，local transform 平滑歸位後自動停用。
-  AFRAME.registerComponent('float-drift', {
-    init: function () {
-      this.mode = null;
-      this.targetPos = new THREE.Vector3();
-      this.targetQuat = new THREE.Quaternion();
-      this.targetScale = new THREE.Vector3(1, 1, 1);
-    },
-    startCameraFloat: function () {
-      const d = THREE.MathUtils.clamp(this.el.object3D.position.length(), 2.0, 5.0);
-      this.targetPos.set(0, -0.18 * d, -d); // 略低於畫面中心，距離維持 d
-      this.targetQuat.identity();
-      this.mode = 'camera';
-    },
-    startAnchorReturn: function () {
-      this.targetPos.set(0, 0, 0);
-      this.targetQuat.identity();
-      this.mode = 'anchor';
-    },
-    tick: function () {
-      if (!this.mode) return;
-      const o = this.el.object3D;
-      o.position.lerp(this.targetPos, 0.06);
-      o.quaternion.slerp(this.targetQuat, 0.06);
-      o.scale.lerp(this.targetScale, 0.06);
-      // 位置/縮放/旋轉全部到位才算收斂；收斂即停用，
-      // 不再每幀 lerp，也不會跟其他 scale 動畫（登場、收服縮小）互搶
-      const settled =
-        o.position.distanceToSquared(this.targetPos) < 1e-4 &&
-        o.scale.distanceToSquared(this.targetScale) < 1e-4 &&
-        Math.abs(o.quaternion.dot(this.targetQuat)) > 0.99995;
-      if (!settled) return;
-      o.position.copy(this.targetPos);
-      o.quaternion.copy(this.targetQuat);
-      o.scale.copy(this.targetScale);
-      this.mode = null;
-    }
-  });
 
   // --- DOM（資料載入前就緒，錯誤 UI 與 AR 事件監聽都依賴這些） ---
   const hintEl = document.getElementById('hint');
@@ -118,7 +33,6 @@
   const anchor = document.getElementById('anchor');
   const spirit = document.getElementById('spirit');
   const spiritModel = document.getElementById('spirit-model');
-  const spiritYaw = document.getElementById('spirit-yaw');
   const sceneEl = document.querySelector('a-scene');
   const cameraEl = document.querySelector('a-camera');
 
@@ -193,40 +107,16 @@
     return;
   }
 
-  // 掛載自訂元件（元件已於上方註冊）
-  spiritYaw.setAttribute('face-camera', '');
-  spirit.setAttribute('float-drift', '');
-
-  // --- 脫錨漂浮 / 回錨 ---
-  // attach() 保留世界座標的代價是矩陣分解：子物件 scale≈0（登場縮放動畫尚未完成
-  // 就跟丟）或新父層矩陣退化（MindAR 未追蹤時 anchor 是零矩陣）都會除以零產生
-  // NaN，精靈會永久消失 → attach 後驗證數值，異常就直接歸位到安全起點，
-  // 再由 float-drift 平滑長回原尺寸。
-  const SCALE_EPS = 1e-3;
-  function safeReparent(parentObj, obj, fallbackX, fallbackY, fallbackZ) {
-    parentObj.attach(obj); // 嘗試保留當下世界座標
-    const p = obj.position, q = obj.quaternion, s = obj.scale;
-    const bad = ![p.x, p.y, p.z, q.x, q.y, q.z, q.w, s.x, s.y, s.z].every(isFinite) ||
-      Math.min(Math.abs(s.x), Math.abs(s.y), Math.abs(s.z)) < SCALE_EPS;
-    if (bad) {
-      obj.position.set(fallbackX, fallbackY, fallbackZ);
-      obj.quaternion.identity();
-      obj.scale.set(SCALE_EPS, SCALE_EPS, SCALE_EPS);
-    }
-  }
-
-  function floatToCamera() {
-    if (state === 'scanning' || state === 'captured') return;
-    const drift = spirit.components['float-drift'];
-    if (spirit.object3D.parent === cameraEl.object3D && drift.mode !== 'anchor') return;
-    safeReparent(cameraEl.object3D, spirit.object3D, 0, -0.36, -2); // 再由 float-drift 平滑漂到定位
-    drift.startCameraFloat();
-  }
-
-  function reanchorToMarker() {
-    if (spirit.object3D.parent === anchor.object3D) return;
-    safeReparent(anchor.object3D, spirit.object3D, 0, 0, 0);
-    spirit.components['float-drift'].startAnchorReturn();
+  // --- 釘到畫面中央 ---
+  // 掃描到的瞬間把精靈改掛到相機下的固定位置：完全螢幕空間穩定、
+  // 正面朝向玩家（identity 旋轉 = 無俯仰角），marker 之後的去留都不影響。
+  const PIN_POS = { x: 0, y: -0.45, z: -1.6 };
+  function pinToCamera() {
+    const o = spirit.object3D;
+    cameraEl.object3D.add(o);
+    o.position.set(PIN_POS.x, PIN_POS.y, PIN_POS.z);
+    o.quaternion.identity();
+    o.scale.set(0.001, 0.001, 0.001); // 由登場動畫（animation__in）放大到 1
   }
 
   // --- 模型動畫剪輯（名稱用萬用字元比對 GLB 內的 clip） ---
@@ -311,7 +201,6 @@
   function startIntro() {
     state = 'intro';
     setHint('');
-    spiritYaw.emit('snapface'); // 初次登場必定正面（帶側身角度）
     spirit.setAttribute('animation__in', 'property: scale; to: 1 1 1; dur: 700; easing: easeOutBack');
     showDialog(data.intro, startPetPhase);
   }
@@ -384,7 +273,6 @@
 
   function capture() {
     state = 'captured';
-    spirit.components['float-drift'].mode = null; // 凍結漂移，別跟收服縮小動畫互搶
     flashEl.classList.add('flash-on');
     playClipOnce(CLIP_CAPTURE);
     spirit.emit('capture');
@@ -401,24 +289,17 @@
   }
 
   // --- MindAR 追蹤事件（實際處理；stub 監聽已於載入前註冊並記錄狀態） ---
+  // Marker 純粹是觸發器：第一次掃描到就把精靈釘到畫面中央開始劇情，
+  // 之後 marker 的出現/消失一律不影響已在進行的任務。
   function onTargetFound() {
     scanLayerEl.classList.add('off');
-    if (state === 'captured') return; // 已收服的精靈保持消失，不再回錨復活
-    reanchorToMarker(); // 曾跟丟漂浮 → 平滑回錨歸位
-    if (state === 'scanning') {
-      startIntro();
-    } else if (state === 'pet') {
-      setHint(data.petPrompt);
-    }
+    if (state !== 'scanning') return;
+    pinToCamera();
+    startIntro();
   }
 
   function onTargetLost() {
-    if (state === 'scanning') {
-      scanLayerEl.classList.remove('off');
-    } else if (state !== 'captured') {
-      // 觸發後跟丟 Marker：精靈漂到鏡頭前，任務繼續，不逼玩家停在原地
-      floatToCamera();
-    }
+    if (state === 'scanning') scanLayerEl.classList.remove('off');
   }
 
   // 已收服過 → 直接提示（重複遊玩仍可再互動，僅提示已收錄）

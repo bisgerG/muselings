@@ -80,24 +80,20 @@
               raycaster="near: 0.01; far: 1000; objects: .clickable"></a-camera>
 
     <a-entity id="anchor" mindar-image-target="targetIndex: 0">
-      <!-- 精靈「小茜」：Draco 壓縮的赤狐模型（834KB），idle 動畫由 animation-mixer 播放 -->
+      <!-- 精靈「小茜」：Draco 壓縮的赤狐模型（834KB），idle 動畫由 animation-mixer 播放。
+           Marker 只是觸發器：掃描到的瞬間 ar-game.js 會把 #spirit 改掛到相機下
+           釘在畫面中央（正面、無俯仰角），之後不再受 marker 追蹤影響 -->
       <a-entity id="spirit" scale="0 0 0" position="0 0 0"
                 animation__pet="property: scale; from: 1 1 1; to: 1.12 1.12 1.12; dir: alternate; loop: 2; dur: 120; easing: easeOutQuad; startEvents: petted"
                 animation__capture="property: scale; to: 0.01 0.01 0.01; dur: 900; easing: easeInBack; startEvents: capture">
-        <!-- 朝向完全交給 face-camera（以螢幕上方為上），此層不再需要固定補償 -->
-        <a-entity id="spirit-orient" rotation="0 0 0">
-          <!-- yaw 層：face-camera 元件（ar-game.js 掛載）讓狐狸繞直立軸面向鏡頭 -->
-          <a-entity id="spirit-yaw">
-            <!-- rotation y90 = 模型正面朝 +Z，朝向交給 face-camera 控制；
-                 src 由 ar-game.js 依 data/muselings.json 的 ?spirit= 參數設定 -->
-            <a-gltf-model id="spirit-model"
-                          scale="0.6 0.6 0.6" position="0 0 0" rotation="0 90 0"
-                          animation-mixer="clip: *smell*; crossFadeDuration: 0.25"></a-gltf-model>
-            <!-- 隱形命中球：兒童手指點到狐狸附近就算，繞開 SkinnedMesh 射線檢測的不可靠 -->
-            <a-sphere class="clickable" radius="0.5" position="0 0.35 0"
-                      material="transparent: true; opacity: 0"></a-sphere>
-          </a-entity>
-        </a-entity>
+        <!-- rotation y90 = 模型正面朝 +Z（釘在相機下時 +Z 正對玩家）；
+             src 由 ar-game.js 依 data/muselings.json 的 ?spirit= 參數設定 -->
+        <a-gltf-model id="spirit-model"
+                      scale="0.6 0.6 0.6" position="0 0 0" rotation="0 90 0"
+                      animation-mixer="clip: *smell*; crossFadeDuration: 0.25"></a-gltf-model>
+        <!-- 隱形命中球：兒童手指點到狐狸附近就算，繞開 SkinnedMesh 射線檢測的不可靠 -->
+        <a-sphere class="clickable" radius="0.5" position="0 0.35 0"
+                  material="transparent: true; opacity: 0"></a-sphere>
       </a-entity>
     </a-entity>
   </a-scene>

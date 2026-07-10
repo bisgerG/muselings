@@ -116,22 +116,23 @@ window.MuselingSave.reset();
 window.MuselingSave.unlock('red_fox', { affinity: 3, name: '小茜', species: '赤狐', zone: '哺乳動物區' });
 ```
 
-   **Testing the marker-lost float / re-anchor logic** (the zoom-in bug fix)
-   without a camera — verified: parent swaps and transforms stay finite even
-   though MindAR's anchor matrix is a zero matrix headless (the `safeReparent`
-   guard in `js/ar-game.js` handles the NaN case):
+   **Testing the pin-to-camera behavior** (marker is only a trigger — on
+   first `targetFound` the spirit is reparented under the camera at a fixed
+   centered position, facing front; later marker found/lost events are
+   ignored while the quest runs):
 
 ```js
 const anchor = document.getElementById('anchor');
 const s = document.getElementById('spirit');
-anchor.emit('targetLost');   // → s.object3D.parent === a-camera's object3D, drift mode 'camera'
-anchor.emit('targetFound');  // → parent back to anchor.object3D, drift mode 'anchor'
-// inspect: s.components['float-drift'].mode, s.object3D.position/scale (must be finite)
+anchor.emit('targetFound');
+// → s.object3D.parent === document.querySelector('a-camera').object3D
+// → s.object3D.position ≈ (0, -0.45, -1.6), quaternion identity (w=1)
+anchor.emit('targetLost');   // → no change; spirit stays pinned
 ```
 
-   Note: drift lerp convergence can't be observed headless — MindAR's arError
-   freezes A-Frame's render loop (scene.time stays ~60ms), so `tick` never
-   runs. State transitions are testable; smooth motion needs a real device.
+   Note: MindAR's arError freezes A-Frame's render loop headless
+   (scene.time stays ~60ms), so scale-in animation and model rendering
+   can't be observed — verify transforms via JS; visuals need a real device.
 
 5. **Testing photo.html (release-pet AR photo page).** Use `?nocam` to skip
    the camera-permission overlay and render on a gradient background:
