@@ -25,6 +25,7 @@
       "emoji": "🦊",
       "model": "assets/models/red_fox.glb",
       "script": "data/scripts/red_fox.json",
+      "arHeight": 1.15,
       "facts": [
         "大尾巴用來保暖和保持平衡",
         "聽力極佳，能聽見雪下老鼠的聲音",

@@ -109,16 +109,48 @@
   }
 
   // --- 釘到畫面中央 ---
-  // 掃描到的瞬間把精靈改掛到相機下的固定位置：完全螢幕空間穩定、
-  // 正面朝向玩家（identity 旋轉 = 無俯仰角），marker 之後的去留都不影響。
-  const PIN_POS = { x: 0, y: -0.38, z: -1.2 }; // 實測：狐狸約佔畫面高度一半、腳掌在對話框上緣
+  // 掃描到的瞬間把精靈改掛到相機下：完全螢幕空間穩定、正面朝向玩家（無俯仰角）。
+  //
+  // 重要：MindAR 的世界單位是「marker 影像的像素尺度」——錨點矩陣帶著數百倍的
+  // 縮放、投影矩陣的近裁剪面也在那個尺度。所以釘選的距離/大小不能寫死，
+  // 必須在掃到當下從錨點矩陣取縮放（S）、從投影矩陣取 cot(fov/2)，
+  // 反推出「精靈高度固定佔畫面 45%」所需的 scale——與裝置 FOV、marker 尺寸無關。
+  const THREE = window.AFRAME.THREE;
+  const SCREEN_HEIGHT_FRACTION = 0.45; // 精靈佔畫面高度比例
+  const Y_OFFSET_FRACTION = 0.20;      // 腳掌位置：畫面中心往下 20%
+  let pinScale = 1;                    // 釘選當下算出的目標縮放，動畫都以它為基準
+
   function pinToCamera() {
     const o = spirit.object3D;
+    const p = new THREE.Vector3(), q = new THREE.Quaternion(), sv = new THREE.Vector3();
+    anchor.object3D.updateWorldMatrix(true, false);
+    anchor.object3D.matrixWorld.decompose(p, q, sv);
+    let S = (Math.abs(sv.x) + Math.abs(sv.y) + Math.abs(sv.z)) / 3; // MindAR 錨點縮放
+    if (!isFinite(S) || S < 1e-6) S = 1;                            // 無 MindAR（測試）時退回 1
+    const d = 3 * S; // 固定放在「3 個 marker 寬」的距離，透視感自然且遠離近裁剪面
+
+    const cam3 = sceneEl.camera;
+    let invTan = (cam3 && cam3.projectionMatrix) ? cam3.projectionMatrix.elements[5] : 0;
+    if (!isFinite(invTan) || invTan <= 0) invTan = 1.19; // cot(40°)＝FOV 80 的預設值
+
+    const modelHeight = entry.arHeight || 0.5; // 模型在 spirit 座標系的身高（總表可調）
+    pinScale = (SCREEN_HEIGHT_FRACTION * 2 * d) / (invTan * modelHeight);
+
     cameraEl.object3D.add(o);
-    o.position.set(PIN_POS.x, PIN_POS.y, PIN_POS.z);
+    o.position.set(0, -(Y_OFFSET_FRACTION * 2 * d) / invTan, -d);
     o.quaternion.identity();
-    o.scale.set(0.001, 0.001, 0.001); // 由登場動畫（animation__in）放大到 1
+
+    // scale 動畫走 A-Frame 屬性系統，全部以 pinScale 為基準重設
+    spirit.setAttribute('scale', '0 0 0'); // 從 0 長出（animation__in 在 startIntro 觸發）
+    spirit.setAttribute('animation__pet',
+      'property: scale; from: ' + v3(pinScale) + '; to: ' + v3(pinScale * 1.12) +
+      '; dir: alternate; loop: 2; dur: 120; easing: easeOutQuad; startEvents: petted');
+    spirit.setAttribute('animation__capture',
+      'property: scale; to: ' + v3(pinScale * 0.01) +
+      '; dur: 900; easing: easeInBack; startEvents: capture');
   }
+
+  function v3(s) { return s + ' ' + s + ' ' + s; }
 
   // --- 模型動畫剪輯（名稱用萬用字元比對 GLB 內的 clip） ---
   const CLIP_IDLE = '*smell*';
@@ -202,7 +234,8 @@
   function startIntro() {
     state = 'intro';
     setHint('');
-    spirit.setAttribute('animation__in', 'property: scale; to: 1 1 1; dur: 700; easing: easeOutBack');
+    spirit.setAttribute('animation__in',
+      'property: scale; from: 0 0 0; to: ' + v3(pinScale) + '; dur: 700; easing: easeOutBack');
     showDialog(data.intro, startPetPhase);
   }
 
