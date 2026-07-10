@@ -272,23 +272,45 @@
     spirit.object3D.rotation.y = yawCurrentRad;
   }, 33);
 
-  // iOS 13+ 的感測權限要在使用者手勢中請求。同時掛 click 與 touchend：
-  // iOS Safari 對沒有 click handler 的區域不一定合成 click 事件，touchend 一定有。
-  // 拿不到就靜默停用（精靈維持正面，其餘功能不受影響）
+  // iOS 13+ 的感測權限要在「使用者手勢」中請求，而且 Safari 在不算手勢的呼叫
+  // 可能同步丟例外——所以：(1) 呼叫包 try/catch；(2) 失敗「不」拆監聽，每次
+  // 觸碰都重試，直到拿到 granted/denied 為止；(3) 另外放一顆看得見的按鈕，
+  // 點按鈕百分之百是使用者手勢。拿不到就維持正面，其餘功能不受影響。
   if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') {
     doStatus = 'need-perm';
-    let asked = false;
-    const askOrientationPermission = () => {
-      if (asked) return;
-      asked = true;
-      document.body.removeEventListener('click', askOrientationPermission);
-      document.body.removeEventListener('touchend', askOrientationPermission);
-      DeviceOrientationEvent.requestPermission()
-        .then(res => { doStatus = 'perm:' + res; debugLog('DO permission: ' + res); })
-        .catch(e => { doStatus = 'perm-err'; debugLog('DO perm err: ' + e.message); });
-    };
-    document.body.addEventListener('click', askOrientationPermission);
-    document.body.addEventListener('touchend', askOrientationPermission);
+
+    const motionBtn = document.createElement('button');
+    motionBtn.className = 'ui-btn motion-btn';
+    motionBtn.textContent = UI.motionPermission || '🧭 點我開啟側身視角';
+    document.getElementById('ui').appendChild(motionBtn);
+
+    let settled = false;
+    function stopAsking() {
+      settled = true;
+      motionBtn.remove();
+      document.removeEventListener('click', askOrientationPermission, true);
+      document.removeEventListener('touchend', askOrientationPermission, true);
+    }
+    function askOrientationPermission() {
+      if (settled) return;
+      try {
+        DeviceOrientationEvent.requestPermission().then(res => {
+          doStatus = 'perm:' + res;
+          debugLog('DO permission: ' + res);
+          if (res === 'granted' || res === 'denied') stopAsking();
+        }).catch(e => {
+          doStatus = 'perm-rej:' + ((e && e.name) || '?');
+          debugLog('DO perm rejected: ' + e);
+        });
+      } catch (e) {
+        doStatus = 'perm-throw:' + ((e && e.name) || '?');
+        debugLog('DO perm threw: ' + e);
+      }
+    }
+    motionBtn.addEventListener('click', askOrientationPermission);
+    // capture 階段掛在 document：不管點到哪、有沒有被中途攔截都收得到
+    document.addEventListener('click', askOrientationPermission, true);
+    document.addEventListener('touchend', askOrientationPermission, true);
   }
 
   // --- 模型動畫剪輯（名稱用萬用字元比對 GLB 內的 clip） ---
