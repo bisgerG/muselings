@@ -83,8 +83,8 @@
       <a-entity id="spirit" scale="0 0 0" position="0 0 0"
                 animation__pet="property: scale; from: 1 1 1; to: 1.12 1.12 1.12; dir: alternate; loop: 2; dur: 120; easing: easeOutQuad; startEvents: petted"
                 animation__capture="property: scale; to: 0.01 0.01 0.01; dur: 900; easing: easeInBack; startEvents: capture">
-        <!-- Marker 以直式（原圖轉 90°）顯示，此層補償錨點座標的旋轉；若狐狸方向顛倒，把 z 改為 -90 -->
-        <a-entity id="spirit-orient" rotation="0 0 90">
+        <!-- 朝向完全交給 face-camera（以螢幕上方為上），此層不再需要固定補償 -->
+        <a-entity id="spirit-orient" rotation="0 0 0">
           <!-- yaw 層：face-camera 元件（ar-game.js 掛載）讓狐狸繞直立軸面向鏡頭 -->
           <a-entity id="spirit-yaw">
             <!-- rotation y90 = 模型正面朝 +Z，朝向交給 face-camera 控制 -->

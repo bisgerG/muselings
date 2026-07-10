@@ -8,13 +8,22 @@
 
   // ===== 自訂 A-Frame 元件（須在掛載到實體前註冊） =====
 
-  // 只繞自身直立軸緩慢面向相機，帶少許側身角度；收到 'snapface' 事件時瞬間對正（初次登場用）
+  // 完整直立 billboard：以「螢幕上方」為上、面向相機（帶少許側身角度）。
+  // 不管 Marker 平放、貼牆或旋轉，狐狸在畫面裡永遠站正。
+  // 收到 'snapface' 事件時瞬間對正（初次登場用）。
   AFRAME.registerComponent('face-camera', {
-    schema: { offsetDeg: { default: -20 }, lerp: { default: 0.07 } },
+    schema: { offsetDeg: { default: -20 }, lerp: { default: 0.08 } },
     init: function () {
       this.camPos = new THREE.Vector3();
       this.selfPos = new THREE.Vector3();
+      this.camQuat = new THREE.Quaternion();
       this.parentQuat = new THREE.Quaternion();
+      this.up = new THREE.Vector3();
+      this.fwd = new THREE.Vector3();
+      this.right = new THREE.Vector3();
+      this.basis = new THREE.Matrix4();
+      this.desired = new THREE.Quaternion();
+      this.offsetQuat = new THREE.Quaternion();
       this.snap = false;
       this.el.addEventListener('snapface', () => { this.snap = true; });
     },
@@ -23,14 +32,21 @@
       if (!cam) return;
       const obj = this.el.object3D;
       cam.getWorldPosition(this.camPos);
+      cam.getWorldQuaternion(this.camQuat);
       obj.getWorldPosition(this.selfPos);
-      const dir = this.camPos.sub(this.selfPos);
+      this.up.set(0, 1, 0).applyQuaternion(this.camQuat);          // 螢幕的上方向
+      this.fwd.copy(this.camPos).sub(this.selfPos);                // 指向相機
+      this.fwd.addScaledVector(this.up, -this.fwd.dot(this.up));   // 投影到水平面（保持站直）
+      if (this.fwd.lengthSq() < 1e-6) return;
+      this.fwd.normalize();
+      this.right.crossVectors(this.up, this.fwd).normalize();
+      this.basis.makeBasis(this.right, this.up, this.fwd);         // +Z 朝相機
+      this.desired.setFromRotationMatrix(this.basis);
+      this.offsetQuat.setFromAxisAngle(this.up, THREE.MathUtils.degToRad(this.data.offsetDeg));
+      this.desired.premultiply(this.offsetQuat);                   // 繞直立軸加側身角
       obj.parent.getWorldQuaternion(this.parentQuat).invert();
-      dir.applyQuaternion(this.parentQuat);
-      const target = Math.atan2(dir.x, dir.z) + THREE.MathUtils.degToRad(this.data.offsetDeg);
-      let delta = target - obj.rotation.y;
-      delta = Math.atan2(Math.sin(delta), Math.cos(delta));
-      obj.rotation.y += delta * (this.snap ? 1 : this.data.lerp);
+      this.desired.premultiply(this.parentQuat);                   // 世界 → 父層局部
+      obj.quaternion.slerp(this.desired, this.snap ? 1 : this.data.lerp);
       this.snap = false;
     }
   });
@@ -40,8 +56,8 @@
     init: function () {
       this.active = false;
       this.targetPos = new THREE.Vector3(0, -0.35, -1.4);
-      // Rz(-90) 抵銷 spirit-orient 的 Rz(90)，讓狐狸在相機座標中站直
-      this.targetQuat = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, -Math.PI / 2));
+      // 外層回正即可，實際朝向由 face-camera（世界座標運算）持續控制
+      this.targetQuat = new THREE.Quaternion();
     },
     tick: function () {
       if (!this.active) return;
