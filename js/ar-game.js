@@ -23,6 +23,24 @@
   const anchor = document.getElementById('anchor');
   const spirit = document.getElementById('spirit');
   const spiritModel = document.getElementById('spirit-model');
+  const sceneEl = document.querySelector('a-scene');
+  const loadingLayerEl = document.getElementById('loading-layer');
+  const scanLayerEl = document.getElementById('scan-layer');
+
+  // --- 自製時光羅盤 UI：AR 引擎就緒後收起載入層、亮起尋標環 ---
+  sceneEl.addEventListener('arReady', () => {
+    loadingLayerEl.classList.add('off');
+    scanLayerEl.classList.remove('off');
+  });
+  sceneEl.addEventListener('arError', () => {
+    loadingLayerEl.querySelector('.loading-text').textContent = '羅盤失靈了……請確認相機權限後重新整理';
+  });
+
+  // ?uidebug：不開相機也能檢視掃描層視覺（開發用）
+  if (location.search.indexOf('uidebug') !== -1) {
+    loadingLayerEl.classList.add('off');
+    scanLayerEl.classList.remove('off');
+  }
 
   // --- 模型動畫剪輯（名稱用萬用字元比對 GLB 內的 clip） ---
   const CLIP_IDLE = '*smell*';
@@ -177,6 +195,7 @@
 
   // --- MindAR 追蹤事件 ---
   anchor.addEventListener('targetFound', () => {
+    scanLayerEl.classList.add('off');
     if (state === 'scanning') {
       startIntro();
     } else if (state === 'pet') {
@@ -185,8 +204,11 @@
   });
 
   anchor.addEventListener('targetLost', () => {
-    if (state !== 'captured' && state !== 'scanning') {
-      setHint('裂縫的訊號變弱了……把鏡頭對回圖騰！');
+    if (state !== 'captured') {
+      scanLayerEl.classList.remove('off');
+      if (state !== 'scanning') {
+        setHint('裂縫的訊號變弱了……把鏡頭對回圖騰！');
+      }
     }
   });
 

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>掃描介面預覽（開發用）</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { background: #333; }
+    .half { position: relative; height: 100vh; overflow: hidden; }
+    /* 模擬相機畫面 */
+    .fake-camera { position: absolute; inset: 0; background: linear-gradient(120deg, #6b6f62 0%, #8a8474 50%, #55584e 100%); }
+    .half .loading-layer, .half .scan-layer { position: absolute; }
+  </style>
+</head>
+<body class="ar-body">
+  <!-- 上半：載入層 -->
+  <div class="half">
+    <div class="loading-layer">
+      <div class="compass">
+        <div class="compass-ring compass-outer"></div>
+        <div class="compass-ring compass-mid"></div>
+        <div class="compass-ring compass-inner"></div>
+        <div class="compass-core"></div>
+      </div>
+      <p class="loading-text">時光羅盤校準中……</p>
+    </div>
+  </div>
+  <!-- 下半：掃描層（疊在模擬相機畫面上） -->
+  <div class="half">
+    <div class="fake-camera"></div>
+    <div class="scan-layer">
+      <div class="vignette"></div>
+      <div class="seeker">
+        <div class="seeker-ring"></div>
+        <span class="corner c-tl"></span><span class="corner c-tr"></span>
+        <span class="corner c-bl"></span><span class="corner c-br"></span>
+        <p class="seeker-text">搜尋時空裂縫</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -13,6 +13,28 @@
 
   <!-- ===== HTML UI 疊層（對話框、任務提示、答題） ===== -->
   <div id="ui">
+    <!-- 載入層：時光羅盤校準（取代 MindAR 預設載入 UI） -->
+    <div id="loading-layer" class="loading-layer">
+      <div class="compass">
+        <div class="compass-ring compass-outer"></div>
+        <div class="compass-ring compass-mid"></div>
+        <div class="compass-ring compass-inner"></div>
+        <div class="compass-core"></div>
+      </div>
+      <p class="loading-text">時光羅盤校準中……</p>
+    </div>
+
+    <!-- 掃描層：尋標環（取代 MindAR 預設白色掃描框） -->
+    <div id="scan-layer" class="scan-layer off">
+      <div class="vignette"></div>
+      <div class="seeker">
+        <div class="seeker-ring"></div>
+        <span class="corner c-tl"></span><span class="corner c-tr"></span>
+        <span class="corner c-bl"></span><span class="corner c-br"></span>
+        <p class="seeker-text">搜尋時空裂縫</p>
+      </div>
+    </div>
+
     <div id="topbar">
       <a class="ui-btn" href="index.html">← 離開</a>
       <div id="hearts" class="hearts hidden"></div>
@@ -45,7 +67,7 @@
        demo.mind 為 MindAR 官方範例的預編譯追蹤檔；
        正式版換成自製圖騰編譯後的 assets/targets/dino.mind -->
   <a-scene
-    mindar-image="imageTargetSrc: assets/targets/demo.mind;"
+    mindar-image="imageTargetSrc: assets/targets/demo.mind; filterMinCF: 0.0001; filterBeta: 0.001; uiScanning: no; uiLoading: no;"
     color-space="sRGB"
     renderer="colorManagement: true"
     gltf-model="dracoDecoderPath: https://www.gstatic.com/draco/versioned/decoders/1.5.7/"
@@ -54,17 +76,23 @@
 
     <a-camera position="0 0 0" look-controls="enabled: false"
               cursor="fuse: false; rayOrigin: mouse;"
-              raycaster="near: 10; far: 10000; objects: .clickable"></a-camera>
+              raycaster="near: 0.01; far: 1000; objects: .clickable"></a-camera>
 
     <a-entity id="anchor" mindar-image-target="targetIndex: 0">
       <!-- 精靈「小茜」：Draco 壓縮的赤狐模型（834KB），idle 動畫由 animation-mixer 播放 -->
       <a-entity id="spirit" scale="0 0 0" position="0 0 0"
                 animation__pet="property: scale; from: 1 1 1; to: 1.12 1.12 1.12; dir: alternate; loop: 2; dur: 120; easing: easeOutQuad; startEvents: petted"
                 animation__capture="property: scale; to: 0.01 0.01 0.01; dur: 900; easing: easeInBack; startEvents: capture">
-        <a-gltf-model id="spirit-model" class="clickable"
-                      src="assets/models/red_fox.glb"
-                      scale="0.6 0.6 0.6" position="0 0 0" rotation="0 65 0"
-                      animation-mixer="clip: *smell*; crossFadeDuration: 0.25"></a-gltf-model>
+        <!-- Marker 以直式（原圖轉 90°）顯示，此層補償錨點座標的旋轉；若狐狸方向顛倒，把 z 改為 -90 -->
+        <a-entity id="spirit-orient" rotation="0 0 90">
+          <a-gltf-model id="spirit-model"
+                        src="assets/models/red_fox.glb"
+                        scale="0.6 0.6 0.6" position="0 0 0" rotation="0 65 0"
+                        animation-mixer="clip: *smell*; crossFadeDuration: 0.25"></a-gltf-model>
+          <!-- 隱形命中球：兒童手指點到狐狸附近就算，繞開 SkinnedMesh 射線檢測的不可靠 -->
+          <a-sphere class="clickable" radius="0.5" position="0 0.35 0"
+                    material="transparent: true; opacity: 0"></a-sphere>
+        </a-entity>
       </a-entity>
     </a-entity>
   </a-scene>
