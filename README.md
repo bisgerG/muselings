@@ -9,8 +9,8 @@
 | 項目 | 方案 |
 |---|---|
 | WebAR | [MindAR.js](https://hiukim.github.io/mind-ar-js-doc/) Image Tracking（CDN 載入） |
-| 3D 場景 | A-Frame 1.5.0（CDN 載入） |
-| 精靈模型 | MVP 用 A-Frame 幾何體組裝，之後可整組換成 `<a-gltf-model>` |
+| 3D 場景 | A-Frame 1.5.0 + aframe-extras（animation-mixer，CDN 載入） |
+| 精靈模型 | Draco 壓縮 GLB（赤狐模型 26.9MB → 834KB，含 3 段骨骼動畫） |
 | Marker | 暫用 MindAR 官方範例的預編譯 `.mind` 檔（已下載至 `assets/targets/`） |
 | 存檔 | localStorage（`js/save.js`，帶 schema 版本、無痕模式降級） |
 
@@ -75,8 +75,29 @@ gh api repos/<user>/muselings/pages -X POST -f "source[branch]=main" -f "source[
 - [ ] 重新整理 / 關閉重開後，圖鑑進度仍在
 - [ ] 中階手機發熱與流暢度可接受
 
+## 模型壓縮管線
+
+新模型（GLB）進專案前先跑兩步（需 Node.js；先在 `tools/` 執行一次 `npm install`）：
+
+```bash
+# 1. 材質轉標準格式 + 只留需要的動畫（逗號分隔的名稱關鍵字）
+node tools/prepare-model.mjs 原始檔.glb 中間檔.glb "idle,shake,jump"
+
+# 2. Draco 壓縮 + 動畫重取樣 + 貼圖 1024² WebP
+npx @gltf-transform/cli optimize 中間檔.glb assets/models/輸出.glb \
+  --compress draco --texture-compress webp --texture-size 1024 --simplify false
+```
+
+實測：26.9MB 的寫實赤狐（41k 面、65 段動畫、2048² PNG）壓成 834KB。
+
+開發時可用 `test-model.html` 在不開相機的情況下檢視模型比例、朝向與動畫。
+
+## 素材出處
+
+- 赤狐模型：[Animated Red Fox – 3D Animal Model](https://sketchfab.com/3d-models/animated-red-fox-3d-animal-model-eab32d36b86e4ee78633fd69d2bec6a5) by AnimalMesh 3D（CC Attribution）。目前為技術驗證用途；正式營運前需購買 Patreon/Fab 商用版。
+
 ## 已知限制（MVP 刻意簡化）
 
 - Marker 為官方範例圖，正式版需換自製圖騰。
-- 精靈為幾何體組裝，無骨骼動畫；Phase 2 換 Draco 壓縮的 GLB。
 - 尚無音效、PWA 離線快取、多展區與道具系統（依開發計畫 Phase 2~3 補上）。
+- 恐龍廳的精靈（小快）待補模型後開放。

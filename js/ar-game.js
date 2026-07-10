@@ -4,7 +4,7 @@
  * → quiz（收服考驗）→ captured（收錄圖鑑）
  */
 (async function () {
-  const data = await fetch('data/scripts/raptor_kid.json').then(r => r.json());
+  const data = await fetch('data/scripts/red_fox.json').then(r => r.json());
 
   // --- DOM ---
   const hintEl = document.getElementById('hint');
@@ -22,6 +22,27 @@
 
   const anchor = document.getElementById('anchor');
   const spirit = document.getElementById('spirit');
+  const spiritModel = document.getElementById('spirit-model');
+
+  // --- 模型動畫剪輯（名稱用萬用字元比對 GLB 內的 clip） ---
+  const CLIP_IDLE = '*smell*';
+  const CLIP_PET = '*shake*';
+  const CLIP_CAPTURE = '*jump*';
+
+  function playClipOnce(clip) {
+    spiritModel.setAttribute('animation-mixer',
+      'clip: ' + clip + '; loop: once; clampWhenFinished: true; crossFadeDuration: 0.25');
+  }
+
+  function playIdle() {
+    spiritModel.setAttribute('animation-mixer',
+      'clip: ' + CLIP_IDLE + '; crossFadeDuration: 0.25');
+  }
+
+  // 單次動畫播完自動回 idle（收服後除外）
+  spiritModel.addEventListener('animation-finished', () => {
+    if (state !== 'captured') playIdle();
+  });
 
   // --- 狀態 ---
   let state = 'scanning';
@@ -99,6 +120,7 @@
   function onSpiritClicked() {
     if (state !== 'pet') return;
     spirit.emit('petted');
+    playClipOnce(CLIP_PET);
     affinity++;
     renderHearts();
     const reaction = data.petReactions[Math.min(affinity, data.petReactions.length) - 1];
@@ -140,6 +162,7 @@
   function capture() {
     state = 'captured';
     flashEl.classList.add('flash-on');
+    playClipOnce(CLIP_CAPTURE);
     spirit.emit('capture');
     MuselingSave.unlock(data.id, { affinity: affinity, name: data.name, species: data.species, zone: data.zone });
 
@@ -169,6 +192,6 @@
 
   // 已收服過 → 直接提示（重複遊玩仍可再互動，僅提示已收錄）
   if (MuselingSave.isUnlocked(data.id)) {
-    setHint('你已收服過小快囉！對準圖騰可以再找牠玩。');
+    setHint('你已收服過' + data.name + '囉！對準圖騰可以再找牠玩。');
   }
 })();

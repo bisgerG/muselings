@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>模型檢視（開發用）</title>
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/aframe-extras@7.5.4/dist/aframe-extras.min.js"></script>
+  <style>
+    .clip-bar { position: fixed; top: 8px; left: 8px; z-index: 10; display: flex; gap: 8px; }
+    .clip-bar button { padding: 8px 14px; font-size: 14px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="clip-bar">
+    <button onclick="setClip('*smell*', '')">idle（嗅聞）</button>
+    <button onclick="setClip('*shake*', 'loop: once;')">撫摸（抖毛）</button>
+    <button onclick="setClip('*jump*', 'loop: once;')">收服（跳躍）</button>
+  </div>
+  <a-scene gltf-model="dracoDecoderPath: https://www.gstatic.com/draco/versioned/decoders/1.5.7/"
+           vr-mode-ui="enabled: false" renderer="colorManagement: true" color-space="sRGB">
+    <a-sky color="#dfeee5"></a-sky>
+    <a-plane rotation="-90 0 0" width="4" height="4" color="#b8ccbc"></a-plane>
+    <a-gltf-model id="fox" src="assets/models/red_fox.glb"
+                  scale="0.6 0.6 0.6" position="0 0 0" rotation="0 65 0"
+                  animation-mixer="clip: *smell*; crossFadeDuration: 0.25"></a-gltf-model>
+    <a-entity camera position="0 0.7 1.6" look-controls wasd-controls></a-entity>
+  </a-scene>
+  <script>
+    function setClip(clip, extra) {
+      document.getElementById('fox').setAttribute('animation-mixer',
+        'clip: ' + clip + '; crossFadeDuration: 0.25; ' + (extra || ''));
+    }
+    document.getElementById('fox').addEventListener('animation-finished', () => setClip('*smell*', ''));
+  </script>
+</body>
+</html>
