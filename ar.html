@@ -22,6 +22,7 @@
         <div class="compass-core"></div>
       </div>
       <p class="loading-text">時光羅盤校準中……</p>
+      <button id="retry-btn" class="btn btn-primary retry-btn hidden" onclick="location.reload()">重新載入</button>
     </div>
 
     <!-- 掃描層：尋標環（取代 MindAR 預設白色掃描框） -->
@@ -87,9 +88,9 @@
         <a-entity id="spirit-orient" rotation="0 0 0">
           <!-- yaw 層：face-camera 元件（ar-game.js 掛載）讓狐狸繞直立軸面向鏡頭 -->
           <a-entity id="spirit-yaw">
-            <!-- rotation y90 = 模型正面朝 +Z，朝向交給 face-camera 控制 -->
+            <!-- rotation y90 = 模型正面朝 +Z，朝向交給 face-camera 控制；
+                 src 由 ar-game.js 依 data/muselings.json 的 ?spirit= 參數設定 -->
             <a-gltf-model id="spirit-model"
-                          src="assets/models/red_fox.glb"
                           scale="0.6 0.6 0.6" position="0 0 0" rotation="0 90 0"
                           animation-mixer="clip: *smell*; crossFadeDuration: 0.25"></a-gltf-model>
             <!-- 隱形命中球：兒童手指點到狐狸附近就算，繞開 SkinnedMesh 射線檢測的不可靠 -->

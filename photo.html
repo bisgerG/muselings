@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>放出精靈｜時空守護者</title>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="photo-body">
+  <!-- 相機背景（?nocam 時隱藏改用漸層） -->
+  <video id="cam" playsinline muted autoplay></video>
+
+  <!-- 精靈層：容器可被拖曳位移，內部 model-viewer 透明背景 -->
+  <div id="pet-holder">
+    <model-viewer id="pet-viewer" autoplay interaction-prompt="none"
+                  camera-orbit="-90deg 80deg 105%">
+      <div slot="progress-bar"></div><!-- 蓋掉預設進度條（會在畫面頂端留一條線） -->
+    </model-viewer>
+  </div>
+
+  <!-- 手勢層：全螢幕接管 pointer 事件（按精靈拖＝移動、空白拖＝旋轉、雙指＝縮放） -->
+  <div id="gesture-layer"></div>
+
+  <!-- UI 疊層 -->
+  <div id="photo-ui">
+    <div id="topbar">
+      <a class="ui-btn" href="dex.html">← 回圖鑑</a>
+      <span id="photo-title" class="ui-btn"></span>
+      <span></span>
+    </div>
+    <p class="photo-hint">按住精靈拖曳＝移動．空白處拖曳＝旋轉．雙指＝縮放</p>
+    <button id="shutter-btn" aria-label="拍照">📸</button>
+  </div>
+
+  <div id="flash" class="flash"></div>
+
+  <!-- 開啟相機（iOS 需要使用者手勢後才能穩定啟動相機） -->
+  <div id="start-overlay" class="photo-overlay">
+    <p class="photo-overlay-text">要把精靈放出來玩，需要開啟相機。<br>不開相機也可以在漸層背景上互動與拍照。</p>
+    <button id="start-btn" class="btn btn-primary photo-overlay-btn">📷 開啟相機</button>
+    <button id="skip-cam-btn" class="btn photo-overlay-btn">不用相機，直接放出來</button>
+    <a class="btn photo-overlay-btn" href="dex.html">← 回圖鑑</a>
+  </div>
+
+  <!-- 拍照結果 -->
+  <div id="preview-overlay" class="photo-overlay hidden">
+    <img id="preview-img" alt="與精靈的合照">
+    <div class="preview-actions">
+      <button id="share-btn" class="btn btn-primary photo-overlay-btn">分享</button>
+      <a id="download-link" class="btn photo-overlay-btn">下載</a>
+      <button id="preview-close" class="btn photo-overlay-btn">繼續玩</button>
+    </div>
+  </div>
+
+  <script src="js/save.js"></script>
+  <script src="js/photo.js"></script>
+</body>
+</html>

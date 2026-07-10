@@ -1,0 +1,50 @@
+{
+  "defaultSpirit": "red_fox",
+  "ui": {
+    "guideName": "艾可",
+    "alreadyCaptured": "你已收服過{name}囉！對準圖騰可以再找牠玩。",
+    "capturedLabel": "{name}（{species}）已收錄！",
+    "loadError": "資料載入失敗了……請檢查網路連線後再試一次",
+    "arError": "羅盤失靈了……請確認相機權限後重新整理",
+    "dexProgress": "已喚醒 {n} / {total} 隻博物之靈",
+    "lockedName": "？？？",
+    "lockedHint": "尚未喚醒這隻博物之靈",
+    "comingSoonSuffix": "（Phase 2 開放）",
+    "caughtAtPrefix": "收錄於 ",
+    "bondLabel": "羈絆：",
+    "releaseLabel": "📸 放出來玩",
+    "comingSoonError": "這隻博物之靈還在沉睡，展區尚未開放……先去找其他夥伴吧！",
+    "notCapturedError": "還沒喚醒這隻博物之靈，先去展區找到牠吧！"
+  },
+  "muselings": [
+    {
+      "id": "red_fox",
+      "name": "小茜",
+      "species": "赤狐",
+      "zone": "哺乳動物區",
+      "emoji": "🦊",
+      "model": "assets/models/red_fox.glb",
+      "script": "data/scripts/red_fox.json",
+      "facts": [
+        "大尾巴用來保暖和保持平衡",
+        "聽力極佳，能聽見雪下老鼠的聲音",
+        "雜食性：老鼠、昆蟲、漿果都吃"
+      ]
+    },
+    {
+      "id": "raptor_kid",
+      "name": "小快",
+      "species": "迅猛龍幼崽",
+      "zone": "恐龍廳",
+      "emoji": "🦖",
+      "model": null,
+      "script": "data/scripts/raptor_kid.json",
+      "facts": [
+        "全身覆蓋著羽毛，手臂骨頭上留有羽莖瘤痕跡",
+        "體型只有一隻火雞那麼高",
+        "和電影裡演的不一樣，是小型掠食者"
+      ],
+      "comingSoon": true
+    }
+  ]
+}

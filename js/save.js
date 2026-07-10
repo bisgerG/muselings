@@ -22,7 +22,11 @@
       const raw = localStorage.getItem(SAVE_KEY);
       if (!raw) return defaultSave();
       const save = JSON.parse(raw);
-      if (save.schemaVersion !== 1) return defaultSave(); // 未來版本在此做遷移
+      if (save.schemaVersion !== 1) {
+        // 未來版本在此做遷移；遷移邏輯就緒前先備份舊檔，避免直接歸零玩家進度
+        try { localStorage.setItem(SAVE_KEY + '_backup', raw); } catch (e2) { /* ignore */ }
+        return defaultSave();
+      }
       return save;
     } catch (e) {
       console.warn('[save] localStorage 讀取失敗，使用記憶體存檔', e);

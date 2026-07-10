@@ -23,68 +23,100 @@
 
   <script src="js/save.js"></script>
   <script>
-    // 圖鑑總表：正式版由 data/muselings.json 驅動，MVP 先內嵌
-    const MUSELINGS = [
-      { id: 'red_fox', name: '小茜', species: '赤狐', zone: '哺乳動物區', emoji: '🦊',
-        model: 'assets/models/red_fox.glb',
-        facts: ['大尾巴用來保暖和保持平衡', '聽力極佳，能聽見雪下老鼠的聲音', '雜食性：老鼠、昆蟲、漿果都吃'] },
-      { id: 'raptor_kid', name: '？？？', species: '？？？', zone: '恐龍廳', emoji: '🦖', facts: [], comingSoon: true }
-    ];
+    // 圖鑑由 data/muselings.json 總表驅動；文案在總表的 ui 區塊（配合日後劇情整包置換）
+    (async function () {
+      const listEl = document.getElementById('dex-list');
+      const progressEl = document.getElementById('dex-progress');
 
-    // 3D 檢視器：預設正面，左右自由旋轉，上下限制在小角度內（65°~95° 仰角）
-    function viewerHtml(m) {
-      return '<model-viewer class="dex-viewer" src="' + m.model + '"' +
-        ' camera-controls disable-pan autoplay interaction-prompt="none"' +
-        ' camera-orbit="-90deg 80deg 110%"' +
-        ' min-camera-orbit="-Infinity 65deg auto" max-camera-orbit="Infinity 95deg auto">' +
-        '</model-viewer>';
-    }
-
-    const save = MuselingSave.load();
-    const listEl = document.getElementById('dex-list');
-    let unlockedCount = 0;
-
-    MUSELINGS.forEach(m => {
-      const entry = save.dex[m.id];
-      const unlocked = !!(entry && entry.unlocked);
-      if (unlocked) unlockedCount++;
-
-      const card = document.createElement('div');
-      card.className = 'dex-card' + (unlocked ? '' : ' locked');
-      if (unlocked) {
-        card.innerHTML =
-          (m.model ? viewerHtml(m) : '<div class="dex-emoji">' + m.emoji + '</div>') +
-          '<h3>' + m.name + '</h3>' +
-          '<p class="dex-species">' + m.species + '｜' + m.zone + '</p>' +
-          '<p class="dex-hearts">羈絆：' + '❤️'.repeat(entry.affinity || 0) + '</p>' +
-          '<ul>' + m.facts.map(f => '<li>' + f + '</li>').join('') + '</ul>' +
-          '<p class="dex-date">收錄於 ' + new Date(entry.caughtAt).toLocaleString('zh-TW') + '</p>';
-      } else {
-        card.innerHTML =
-          '<div class="dex-emoji">❓</div>' +
-          '<h3>？？？</h3>' +
-          '<p class="dex-species">' + m.zone + (m.comingSoon ? '（Phase 2 開放）' : '') + '</p>' +
-          '<p class="dex-locked-hint">尚未喚醒這隻博物之靈</p>';
+      function el(tag, className, text) {
+        const node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text != null) node.textContent = text;
+        return node;
       }
-      listEl.appendChild(card);
-    });
 
-    document.getElementById('dex-progress').textContent =
-      '已喚醒 ' + unlockedCount + ' / ' + MUSELINGS.length + ' 隻博物之靈';
-
-    // 兩段式清除，避免誤觸
-    const resetBtn = document.getElementById('reset-btn');
-    let armed = false;
-    resetBtn.addEventListener('click', () => {
-      if (!armed) {
-        armed = true;
-        resetBtn.textContent = '再點一次確認清除！';
-        setTimeout(() => { armed = false; resetBtn.textContent = '清除進度（測試用）'; }, 3000);
-      } else {
-        MuselingSave.reset();
-        location.reload();
+      function fmt(tpl, vars) {
+        return (tpl || '').replace(/\{(\w+)\}/g, (m, k) => (vars && vars[k] != null) ? vars[k] : m);
       }
-    });
+
+      let registry;
+      try {
+        const res = await fetch('data/muselings.json');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        registry = await res.json();
+      } catch (e) {
+        console.error('[dex] 總表載入失敗', e);
+        listEl.appendChild(el('p', 'dex-locked-hint', '圖鑑資料載入失敗，請重新整理再試。'));
+        return;
+      }
+      const UI = registry.ui || {};
+
+      // 3D 檢視器：預設正面，左右自由旋轉，上下限制在小角度內（65°~95° 仰角）
+      function buildViewer(m) {
+        const viewer = document.createElement('model-viewer');
+        viewer.className = 'dex-viewer';
+        viewer.setAttribute('src', m.model);
+        viewer.setAttribute('camera-controls', '');
+        viewer.setAttribute('disable-pan', '');
+        viewer.setAttribute('autoplay', '');
+        viewer.setAttribute('interaction-prompt', 'none');
+        viewer.setAttribute('camera-orbit', '-90deg 80deg 110%');
+        viewer.setAttribute('min-camera-orbit', '-Infinity 65deg auto');
+        viewer.setAttribute('max-camera-orbit', 'Infinity 95deg auto');
+        return viewer;
+      }
+
+      const save = MuselingSave.load();
+      let unlockedCount = 0;
+
+      registry.muselings.forEach(m => {
+        const entry = save.dex[m.id];
+        const unlocked = !!(entry && entry.unlocked);
+        if (unlocked) unlockedCount++;
+
+        const card = el('div', 'dex-card' + (unlocked ? '' : ' locked'));
+        if (unlocked) {
+          card.appendChild(m.model ? buildViewer(m) : el('div', 'dex-emoji', m.emoji));
+          card.appendChild(el('h3', null, m.name));
+          card.appendChild(el('p', 'dex-species', m.species + '｜' + m.zone));
+          card.appendChild(el('p', 'dex-hearts',
+            (UI.bondLabel || '羈絆：') + '❤️'.repeat(Math.min(entry.affinity || 0, 10))));
+          const ul = el('ul');
+          (m.facts || []).forEach(f => ul.appendChild(el('li', null, f)));
+          card.appendChild(ul);
+          card.appendChild(el('p', 'dex-date',
+            (UI.caughtAtPrefix || '收錄於 ') + new Date(entry.caughtAt).toLocaleString('zh-TW')));
+          if (m.model) {
+            const release = el('a', 'btn btn-primary dex-release', UI.releaseLabel || '📸 放出來玩');
+            release.href = 'photo.html?spirit=' + encodeURIComponent(m.id);
+            card.appendChild(release);
+          }
+        } else {
+          card.appendChild(el('div', 'dex-emoji', '❓'));
+          card.appendChild(el('h3', null, UI.lockedName || '？？？'));
+          card.appendChild(el('p', 'dex-species',
+            m.zone + (m.comingSoon ? (UI.comingSoonSuffix || '') : '')));
+          card.appendChild(el('p', 'dex-locked-hint', UI.lockedHint || '尚未喚醒這隻博物之靈'));
+        }
+        listEl.appendChild(card);
+      });
+
+      progressEl.textContent = fmt(UI.dexProgress, { n: unlockedCount, total: registry.muselings.length });
+
+      // 兩段式清除，避免誤觸
+      const resetBtn = document.getElementById('reset-btn');
+      let armed = false;
+      resetBtn.addEventListener('click', () => {
+        if (!armed) {
+          armed = true;
+          resetBtn.textContent = '再點一次確認清除！';
+          setTimeout(() => { armed = false; resetBtn.textContent = '清除進度（測試用）'; }, 3000);
+        } else {
+          MuselingSave.reset();
+          location.reload();
+        }
+      });
+    })();
   </script>
 </body>
 </html>

@@ -60,6 +60,7 @@ h1 { margin: 12px 0 4px; font-size: 34px; letter-spacing: 6px; }
   --poster-color: transparent;
 }
 .dex-species { color: #a8d5bc; margin: 0; font-size: 14px; }
+.dex-release { margin-top: 12px; }
 .dex-hearts { margin: 6px 0 0; }
 .dex-date { font-size: 12px; color: #8fb8a0; margin: 8px 0 0; }
 .dex-locked-hint { font-size: 14px; color: #a8d5bc; }
@@ -173,6 +174,10 @@ h1 { margin: 12px 0 4px; font-size: 34px; letter-spacing: 6px; }
   margin-top: 28px; color: #a8d5bc; font-size: 15px; letter-spacing: 4px;
   animation: breathe 1.8s ease-in-out infinite;
 }
+.retry-btn {
+  pointer-events: auto;
+  margin-top: 24px; width: auto; padding: 12px 28px;
+}
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes breathe { 50% { opacity: 0.45; } }
 
@@ -207,3 +212,71 @@ h1 { margin: 12px 0 4px; font-size: 34px; letter-spacing: 6px; }
   text-shadow: 0 0 10px rgba(255, 209, 102, 0.6);
   animation: breathe 2.2s ease-in-out infinite;
 }
+
+/* ===== 放出精靈：AR 拍照互動頁 ===== */
+.photo-body { background: #000; height: 100vh; overflow: hidden; }
+.photo-body .hidden { display: none !important; }
+.photo-body.nocam {
+  background: linear-gradient(160deg, #0e2a3a 0%, #1c4a4a 60%, #2c6e49 100%);
+}
+#cam {
+  position: fixed; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; z-index: 0;
+}
+.photo-body.nocam #cam { display: none; }
+
+#pet-holder {
+  --s: min(80vmin, 420px);
+  position: fixed; z-index: 1;
+  left: calc(50% - var(--s) / 2); top: calc(50% - var(--s) / 2);
+  width: var(--s); height: var(--s);
+  will-change: transform;
+}
+#pet-holder model-viewer {
+  width: 100%; height: 100%;
+  background: transparent; --poster-color: transparent;
+}
+
+#gesture-layer {
+  position: fixed; inset: 0; z-index: 5;
+  touch-action: none; /* 交給自訂手勢，避免瀏覽器捲動/縮放搶事件 */
+}
+
+#photo-ui {
+  position: fixed; inset: 0; z-index: 10;
+  pointer-events: none;
+  display: flex; flex-direction: column;
+}
+#photo-ui #topbar { pointer-events: none; }
+#photo-ui .ui-btn { pointer-events: auto; }
+.photo-hint {
+  margin: auto auto 0; padding: 6px 14px; border-radius: 999px;
+  background: rgba(0, 0, 0, 0.45); color: #f0f7f2;
+  font-size: 12px; letter-spacing: 1px;
+}
+#shutter-btn {
+  pointer-events: auto;
+  align-self: center;
+  margin: 12px auto calc(20px + env(safe-area-inset-bottom, 0px));
+  width: 72px; height: 72px; border-radius: 50%;
+  border: 4px solid #fff; background: rgba(255, 255, 255, 0.25);
+  font-size: 30px; line-height: 1; cursor: pointer;
+}
+#shutter-btn:active { background: rgba(255, 255, 255, 0.55); }
+.photo-body .flash { position: fixed; z-index: 15; }
+
+.photo-overlay {
+  position: fixed; inset: 0; z-index: 20;
+  background: rgba(8, 26, 38, 0.94);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 14px; padding: 24px; text-align: center; color: #f0f7f2;
+}
+.photo-overlay.hidden { display: none; }
+.photo-overlay-text { margin: 0 0 8px; font-size: 16px; line-height: 1.8; }
+.photo-overlay-btn { width: auto; min-width: 220px; }
+#preview-img {
+  max-width: 90vw; max-height: 60vh;
+  border-radius: 12px; border: 2px solid #7fd1ae;
+}
+.preview-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.preview-actions .photo-overlay-btn { min-width: 0; padding: 12px 22px; }
