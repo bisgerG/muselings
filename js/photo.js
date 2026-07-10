@@ -45,7 +45,7 @@
   // --- 載入總表 → 檢查收服狀態 → 設定模型 ---
   let entry, UI = {};
   try {
-    const res = await fetch('data/muselings.json');
+    const res = await fetch('data/muselings.json', { cache: 'no-cache' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const registry = await res.json();
     UI = registry.ui || {};

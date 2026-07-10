@@ -76,7 +76,8 @@
 
   // --- 載入總表與精靈劇本 ---
   async function fetchJson(url) {
-    const res = await fetch(url);
+    // no-cache：強制向伺服器驗證，策展人改完 JSON 不用等瀏覽器快取過期
+    const res = await fetch(url, { cache: 'no-cache' });
     if (!res.ok) throw new Error(url + ' → HTTP ' + res.status);
     return res.json();
   }
@@ -110,7 +111,7 @@
   // --- 釘到畫面中央 ---
   // 掃描到的瞬間把精靈改掛到相機下的固定位置：完全螢幕空間穩定、
   // 正面朝向玩家（identity 旋轉 = 無俯仰角），marker 之後的去留都不影響。
-  const PIN_POS = { x: 0, y: -0.45, z: -1.6 };
+  const PIN_POS = { x: 0, y: -0.38, z: -1.2 }; // 實測：狐狸約佔畫面高度一半、腳掌在對話框上緣
   function pinToCamera() {
     const o = spirit.object3D;
     cameraEl.object3D.add(o);

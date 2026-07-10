@@ -7,7 +7,8 @@
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/aframe-extras@7.5.4/dist/aframe-extras.min.js"></script>
-  <link rel="stylesheet" href="css/style.css">
+  <!-- ?v= 版本參數：每次改版遞增，避免 GitHub Pages 快取讓新 HTML 配到舊 JS/CSS -->
+  <link rel="stylesheet" href="css/style.css?v=3">
 </head>
 <body class="ar-body">
 
@@ -89,7 +90,7 @@
         <!-- rotation y90 = 模型正面朝 +Z（釘在相機下時 +Z 正對玩家）；
              src 由 ar-game.js 依 data/muselings.json 的 ?spirit= 參數設定 -->
         <a-gltf-model id="spirit-model"
-                      scale="0.6 0.6 0.6" position="0 0 0" rotation="0 90 0"
+                      scale="0.78 0.78 0.78" position="0 0 0" rotation="0 90 0"
                       animation-mixer="clip: *smell*; crossFadeDuration: 0.25"></a-gltf-model>
         <!-- 隱形命中球：兒童手指點到狐狸附近就算，繞開 SkinnedMesh 射線檢測的不可靠 -->
         <a-sphere class="clickable" radius="0.5" position="0 0.35 0"
@@ -98,7 +99,7 @@
     </a-entity>
   </a-scene>
 
-  <script src="js/save.js"></script>
-  <script src="js/ar-game.js"></script>
+  <script src="js/save.js?v=3"></script>
+  <script src="js/ar-game.js?v=3"></script>
 </body>
 </html>
