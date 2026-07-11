@@ -4,13 +4,36 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>奇遇日誌 The Encounter Journal</title>
-  <link rel="stylesheet" href="css/style.css?v=10">
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
+  <link rel="stylesheet" href="css/style.css?v=11">
 </head>
 <body class="page">
+  <!-- 繪本封面場景（純裝飾） -->
+  <div class="sky-scene" aria-hidden="true">
+    <div class="sun"></div>
+    <div class="cloud cloud-a"></div>
+    <div class="cloud cloud-b"></div>
+    <div class="hill hill-back"></div>
+    <div class="hill hill-front"></div>
+  </div>
+
   <main class="landing">
     <p class="badge">MVP 技術驗證版</p>
     <h1>奇遇日誌</h1>
     <p class="subtitle">萬物皆有故事，等你停下來聽。</p>
+
+    <!-- 3D 小茜迎賓：點泡泡換一句話 -->
+    <div class="fox-stage">
+      <p id="fox-bubble" class="fox-bubble">你停下來了呀！</p>
+      <model-viewer class="fox-viewer" src="assets/models/red_fox.glb"
+                    autoplay animation-name="" interaction-prompt="none"
+                    camera-controls disable-pan disable-zoom
+                    camera-orbit="-90deg 82deg 105%"
+                    min-camera-orbit="-Infinity 65deg auto"
+                    max-camera-orbit="Infinity 95deg auto">
+        <div slot="progress-bar"></div>
+      </model-viewer>
+    </div>
 
     <section class="story-card">
       <p>世界上每個角落，都住著故事化成的小生命——<strong>小遇</strong>。牠們不躲人，只是大家走得太快。</p>
@@ -36,5 +59,28 @@
       </ol>
     </section>
   </main>
+
+  <script>
+    // 小茜的迎賓台詞：進頁隨機一句，點泡泡換下一句（不重複到連續同句）
+    (function () {
+      const lines = [
+        '你停下來了呀！',
+        '今天想去哪裡走走？',
+        '小快說牠也想被你發現……',
+        '（尾巴搖了搖）我的故事，你還記得嗎？',
+        '會發光的圖騰，就是我們的家喔。',
+        '日誌的下一頁還空著呢！'
+      ];
+      const bubble = document.getElementById('fox-bubble');
+      let last = Math.floor(Math.random() * lines.length);
+      bubble.textContent = lines[last];
+      bubble.addEventListener('click', () => {
+        let next;
+        do { next = Math.floor(Math.random() * lines.length); } while (next === last);
+        last = next;
+        bubble.textContent = lines[next];
+      });
+    })();
+  </script>
 </body>
 </html>

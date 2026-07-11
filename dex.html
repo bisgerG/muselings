@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>我的日誌｜奇遇日誌</title>
   <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
-  <link rel="stylesheet" href="css/style.css?v=10">
+  <link rel="stylesheet" href="css/style.css?v=11">
 </head>
 <body class="page">
   <main class="landing">
@@ -25,7 +25,7 @@
     </nav>
   </main>
 
-  <script src="js/save.js?v=10"></script>
+  <script src="js/save.js?v=11"></script>
   <script>
     // 圖鑑由 data/muselings.json 總表驅動；文案在總表的 ui 區塊（配合日後劇情整包置換）
     (async function () {
@@ -73,14 +73,23 @@
       const save = MuselingSave.load();
       let unlockedCount = 0;
 
-      registry.muselings.forEach(m => {
+      registry.muselings.forEach((m, idx) => {
         const entry = save.dex[m.id];
         const unlocked = !!(entry && entry.unlocked);
         if (unlocked) unlockedCount++;
 
         const card = el('div', 'dex-card' + (unlocked ? '' : ' locked'));
+        card.appendChild(el('span', 'page-tab', '第 ' + (idx + 1) + ' 頁'));
         if (unlocked) {
-          card.appendChild(m.model ? buildViewer(m) : el('div', 'dex-emoji', m.emoji));
+          if (m.model) {
+            // 拍立得相框：白框＋手寫圖說
+            const frame = el('div', 'polaroid');
+            frame.appendChild(buildViewer(m));
+            frame.appendChild(el('p', 'polaroid-caption', '在' + m.zone + '相遇的朋友'));
+            card.appendChild(frame);
+          } else {
+            card.appendChild(el('div', 'dex-emoji', m.emoji));
+          }
           card.appendChild(el('h3', null, m.name));
           card.appendChild(el('p', 'dex-species', m.species + '｜' + m.zone));
           card.appendChild(el('p', 'dex-hearts',

@@ -1,20 +1,24 @@
-/* ===== 奇遇日誌 視覺系統 =====
-   世界觀：一本會發光的旅行手札。
-   亮面頁（首頁/日誌/圖騰）＝暖紙頁；AR/拍照頁的 UI ＝貼在鏡頭畫面上的日誌卡片。
-   色彩：紙 #F5F2E8｜墨 #2B2A24｜榕樹綠 #37715B（主）｜爐火琥珀 #8F6318（艾可手寫/點綴）
-   字體：標題走宋體（手札感）、艾可筆記走楷體（手寫字設定）、內文系統黑體 */
+/* ===== 奇遇日誌 視覺系統 v2：繪本風 =====
+   世界觀：一本住著小遇的繪本日誌。
+   亮面頁（首頁/日誌/圖騰）＝天空與草丘的繪本場景，內容是紙頁與貼紙；
+   鏡頭頁（AR/拍照）＝深底，但元件全用繪本語言（粗描邊、對話泡泡、便利貼、膠帶）。
+   調色：天空 #A8D8EA→#7EC3DC｜草地 #7FBF6E/#4E9A57｜太陽 #FFC94D
+        奶油 #FFF8E7｜紙 #FDF8EC｜深墨棕 #3A3226｜行動綠 #2F8C5C｜艾可琥珀墨 #8F6318 */
 :root {
-  --paper: #F5F2E8;
-  --paper-card: #FDFBF3;
-  --ink: #2B2A24;
-  --ink-muted: #6D6A5C;
-  --green: #37715B;
-  --green-soft: #7CC3A4;   /* 深色鏡頭疊層上的綠 */
-  --amber-ink: #8F6318;    /* 紙上的琥珀（夠深，可讀） */
-  --amber-glow: #E8BC66;   /* 鏡頭疊層上的琥珀光 */
-  --line: #DAD4BF;
-  --danger: #9C4A3A;
-  --serif: "Songti TC", "Noto Serif TC", "PMingLiU", serif;
+  --sky-hi: #A8D8EA;
+  --sky-lo: #7EC3DC;
+  --grass: #7FBF6E;
+  --grass-deep: #4E9A57;
+  --sun: #FFC94D;
+  --cream: #FFF8E7;
+  --paper: #FDF8EC;
+  --ink: #3A3226;
+  --ink-soft: rgba(58, 50, 38, 0.75);
+  --green: #2F8C5C;
+  --amber-ink: #8F6318;
+  --amber-glow: #E8BC66;
+  --tape: rgba(232, 188, 102, 0.55);
+  --danger: #B3543F;
   --hand: "Kaiti TC", "DFKai-SB", "BiauKai", "Songti TC", serif;
 }
 
@@ -25,96 +29,232 @@ body {
   color: var(--ink);
 }
 
-/* ===== 一般頁面（首頁/日誌/圖騰）＝紙頁 ===== */
+/* ===== 亮面頁：繪本天空 ===== */
 .page {
-  /* 紙面＋極淡的橫線，像手札內頁 */
-  background:
-    repeating-linear-gradient(180deg, transparent 0 31px, rgba(43, 42, 36, 0.045) 31px 32px),
-    var(--paper);
+  background: linear-gradient(180deg, var(--sky-hi) 0%, var(--sky-lo) 55%, #9BCB8F 100%);
   min-height: 100vh;
   color: var(--ink);
 }
-.landing { max-width: 480px; margin: 0 auto; padding: 32px 20px 48px; text-align: center; }
+.landing {
+  position: relative; z-index: 1;
+  max-width: 480px; margin: 0 auto; padding: 28px 20px 48px; text-align: center;
+}
+
+/* --- 首頁封面場景（雲、太陽、草丘；純裝飾，僅 index 放這些節點） --- */
+.sky-scene { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.sun {
+  position: absolute; top: 36px; right: 8vw;
+  width: 88px; height: 88px; border-radius: 50%;
+  background: var(--sun);
+  box-shadow: 0 0 0 14px rgba(255, 201, 77, 0.35), 0 0 60px 20px rgba(255, 201, 77, 0.5);
+}
+.cloud {
+  position: absolute;
+  width: 150px; height: 46px; border-radius: 999px;
+  background: #fff; opacity: 0.92;
+}
+.cloud::before, .cloud::after {
+  content: ""; position: absolute; background: #fff; border-radius: 50%;
+}
+.cloud::before { width: 62px; height: 62px; top: -30px; left: 24px; }
+.cloud::after { width: 44px; height: 44px; top: -20px; right: 26px; }
+.cloud-a { top: 9%; left: -20px; transform: scale(0.9); }
+.cloud-b { top: 22%; right: -30px; transform: scale(0.68); opacity: 0.8; }
+.hill {
+  position: absolute; border-radius: 50%;
+}
+.hill-back {
+  width: 160vw; height: 60vw; min-height: 260px;
+  left: -55vw; bottom: -32vw; background: var(--grass);
+}
+.hill-front {
+  width: 170vw; height: 62vw; min-height: 270px;
+  right: -60vw; bottom: -40vw; background: var(--grass-deep);
+}
+
+/* --- 繪本 logo 標題 --- */
 .badge {
   display: inline-block; font-size: 12px; letter-spacing: 2px;
-  border: 1px solid var(--amber-ink); color: var(--amber-ink);
-  border-radius: 999px; padding: 4px 12px; background: var(--paper-card);
+  border: 2px solid var(--ink-soft); color: var(--ink); border-radius: 999px;
+  padding: 4px 12px; background: var(--cream);
 }
 h1 {
-  margin: 14px 0 4px; font-size: 34px; letter-spacing: 6px;
-  font-family: var(--serif); font-weight: 700; color: var(--ink);
+  margin: 14px 0 6px; font-size: 40px; letter-spacing: 8px;
+  font-weight: 900; color: var(--ink);
+  text-shadow:
+    2px 2px 0 var(--cream), -2px 2px 0 var(--cream),
+    2px -2px 0 var(--cream), -2px -2px 0 var(--cream),
+    0 4px 0 rgba(58, 50, 38, 0.18);
 }
-.subtitle { margin: 0 0 24px; color: var(--ink-muted); letter-spacing: 2px; font-family: var(--serif); }
+.subtitle {
+  margin: 0 0 20px; color: var(--ink); letter-spacing: 2px; font-weight: 700;
+  text-shadow: 1px 1px 0 rgba(255, 248, 231, 0.8);
+}
 
+/* --- 3D 小茜迎賓 --- */
+.fox-stage { position: relative; margin: 4px 0 -6px; }
+.fox-viewer {
+  width: 100%; height: 250px;
+  background: transparent; --poster-color: transparent;
+}
+.fox-bubble {
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%) rotate(-1deg);
+  max-width: 82%;
+  background: var(--cream); color: var(--ink);
+  border: 3px solid var(--ink); border-radius: 18px;
+  padding: 8px 16px; font-size: 15px; font-weight: 700; line-height: 1.5;
+  cursor: pointer; user-select: none;
+  box-shadow: 0 3px 0 rgba(58, 50, 38, 0.25);
+}
+.fox-bubble::after { /* 泡泡尾巴（指向下方的小茜） */
+  content: ""; position: absolute; bottom: -11px; left: 50%;
+  width: 16px; height: 16px; background: var(--cream);
+  border-right: 3px solid var(--ink); border-bottom: 3px solid var(--ink);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+/* --- 卡片：雲朵紙卡 --- */
 .story-card, .note-card {
-  background: var(--paper-card);
-  border: 1px solid var(--line);
-  border-radius: 6px; padding: 16px 20px; margin: 16px 0;
+  background: var(--cream);
+  border: 3px solid var(--ink-soft);
+  border-radius: 22px; padding: 16px 20px; margin: 16px 0;
   text-align: left; line-height: 1.85; font-size: 15px;
-  box-shadow: 0 1px 3px rgba(43, 42, 36, 0.08);
+  box-shadow: 0 4px 0 rgba(58, 50, 38, 0.18);
 }
 .story-card strong { color: var(--green); }
-.note-card h2 {
-  font-size: 15px; margin: 0 0 8px; color: var(--green);
-  font-family: var(--serif); letter-spacing: 2px;
-}
+.note-card { background: var(--paper); border-style: dashed; border-width: 2px; box-shadow: none; }
+.note-card h2 { font-size: 15px; margin: 0 0 8px; color: var(--green); letter-spacing: 2px; }
 .note-card ol { margin: 0; padding-left: 20px; }
 .note-card a { color: var(--green); }
-.note-card code { background: rgba(43, 42, 36, 0.08); padding: 1px 6px; border-radius: 4px; }
+.note-card code { background: rgba(58, 50, 38, 0.08); padding: 1px 6px; border-radius: 4px; }
 
-/* 艾可的頁緣手寫筆記：楷體＋琥珀墨＋虛線框（世界觀：前任主人留下的字跡） */
+/* --- 艾可的手寫貼紙（楷體＋琥珀墨＋膠帶） --- */
 .echo-note {
-  margin: 16px 0; padding: 10px 18px;
-  border: 1px dashed var(--amber-ink); border-radius: 6px;
+  position: relative;
+  margin: 20px 0 16px; padding: 12px 18px;
+  background: #F6E8C8;
+  border: 2px solid rgba(143, 99, 24, 0.45); border-radius: 10px;
   font-family: var(--hand); font-size: 17px; line-height: 1.9;
   color: var(--amber-ink); text-align: left;
-  background: transparent;
-  transform: rotate(-0.4deg); /* 微傾，像隨手貼上的一頁 */
+  transform: rotate(-1deg);
+  box-shadow: 0 3px 0 rgba(58, 50, 38, 0.15);
+}
+.echo-note::before { /* 膠帶 */
+  content: ""; position: absolute; top: -10px; left: 50%;
+  width: 84px; height: 20px; background: var(--tape);
+  transform: translateX(-50%) rotate(2deg); border-radius: 3px;
 }
 .echo-note p { margin: 0; }
 
-.menu { display: flex; flex-direction: column; gap: 12px; margin: 24px 0; }
+/* --- 按鈕：繪本大圓鈕 --- */
+.menu { display: flex; flex-direction: column; gap: 14px; margin: 22px 0; }
 .btn {
-  display: block; width: 100%; padding: 14px; border-radius: 10px;
-  background: var(--paper-card); color: var(--ink);
-  border: 1px solid var(--ink);
-  text-decoration: none; font-size: 16px; cursor: pointer; text-align: center;
+  display: block; width: 100%; padding: 15px; border-radius: 999px;
+  background: var(--cream); color: var(--ink);
+  border: 3px solid var(--ink);
+  text-decoration: none; font-size: 17px; font-weight: 700;
+  cursor: pointer; text-align: center;
+  box-shadow: 0 4px 0 rgba(58, 50, 38, 0.35);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
-.btn-primary { background: var(--green); border-color: var(--green); color: #F7F5EC; font-weight: 700; }
-.btn-danger { background: transparent; border-color: var(--danger); color: var(--danger); font-size: 13px; }
+.btn:active { transform: translateY(3px) scale(0.98); box-shadow: 0 1px 0 rgba(58, 50, 38, 0.35); }
+.btn-primary { background: var(--green); border-color: var(--ink); color: var(--cream); }
+.btn-danger {
+  background: transparent; border-color: var(--danger); color: var(--danger);
+  font-size: 13px; font-weight: 400; box-shadow: none;
+}
 
+/* --- 圖騰卡 --- */
 .marker-frame {
-  background: #fff; border-radius: 6px; padding: 16px; margin: 8px 0;
-  border: 1px solid var(--line); box-shadow: 0 1px 3px rgba(43, 42, 36, 0.08);
+  position: relative;
+  background: #fff; border: 3px solid var(--ink); border-radius: 20px;
+  padding: 18px; margin: 14px 0;
+  box-shadow: 0 4px 0 rgba(58, 50, 38, 0.25);
 }
+.marker-frame::before, .marker-frame::after { /* 膠帶角 */
+  content: ""; position: absolute; top: -10px;
+  width: 64px; height: 20px; background: var(--tape); border-radius: 3px;
+}
+.marker-frame::before { left: 12px; transform: rotate(-8deg); }
+.marker-frame::after { right: 12px; transform: rotate(8deg); }
 .marker-img { width: 100%; max-width: 360px; display: block; margin: 0 auto; }
 
-/* ===== 日誌（圖鑑）：每張卡＝手札的一頁 ===== */
-.dex-list { display: flex; flex-direction: column; gap: 16px; margin-top: 8px; }
+/* ===== 日誌（圖鑑）：翻開的日誌 ===== */
+/* 進度＝書籤緞帶 */
+#dex-progress.subtitle {
+  display: inline-block; margin: 0 0 20px; padding: 8px 22px;
+  background: var(--green); color: var(--cream); font-weight: 700; letter-spacing: 1px;
+  border: 3px solid var(--ink); border-radius: 6px;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 8px), 0 100%);
+  padding-bottom: 16px;
+  text-shadow: none;
+}
+.dex-list { display: flex; flex-direction: column; gap: 20px; margin-top: 4px; }
+
+/* 一張卡＝日誌的一頁 */
 .dex-card {
-  background: var(--paper-card); border: 1px solid var(--line);
-  border-radius: 6px; padding: 20px; text-align: left;
-  box-shadow: 0 1px 3px rgba(43, 42, 36, 0.08);
+  position: relative;
+  background: var(--paper); border: 3px solid var(--ink-soft);
+  border-radius: 18px; padding: 20px; text-align: left;
+  box-shadow: 0 4px 0 rgba(58, 50, 38, 0.2);
 }
-.dex-card.locked {
-  background: transparent; border-style: dashed; box-shadow: none;
-  color: var(--ink-muted);
+.dex-card::before, .dex-card::after { /* 上緣膠帶角 */
+  content: ""; position: absolute; top: -10px;
+  width: 58px; height: 18px; background: var(--tape); border-radius: 3px;
 }
-.dex-card h3 { margin: 4px 0; font-size: 22px; font-family: var(--serif); }
-.dex-card ul { margin: 8px 0; padding-left: 20px; font-size: 14px; line-height: 1.7; }
-.dex-emoji { font-size: 40px; }
+.dex-card::before { left: 14px; transform: rotate(-7deg); }
+.dex-card::after { right: 14px; transform: rotate(7deg); }
+
+.page-tab { /* 頁碼籤 */
+  position: absolute; top: 12px; right: -8px;
+  background: var(--sun); color: var(--ink);
+  border: 2px solid var(--ink); border-radius: 8px 0 0 8px;
+  padding: 3px 10px; font-size: 12px; font-weight: 700;
+  transform: rotate(2deg);
+}
+
+/* 拍立得相框（3D 檢視器裝在裡面） */
+.polaroid {
+  background: #fff; border: 2px solid var(--ink-soft); border-radius: 6px;
+  padding: 10px 10px 6px; margin: 6px 0 10px;
+  transform: rotate(-1.2deg);
+  box-shadow: 0 3px 8px rgba(58, 50, 38, 0.2);
+}
 .dex-viewer {
-  width: 100%; height: 240px; border-radius: 6px;
-  background: radial-gradient(ellipse at 50% 60%, rgba(55, 113, 91, 0.12), rgba(43, 42, 36, 0.05));
+  width: 100%; height: 230px; border-radius: 4px;
+  background: radial-gradient(ellipse at 50% 60%, rgba(127, 191, 110, 0.25), rgba(126, 195, 220, 0.2));
   --poster-color: transparent;
 }
-.dex-species { color: var(--green); margin: 0; font-size: 14px; }
-.dex-release { margin-top: 12px; }
-.dex-hearts { margin: 6px 0 0; }
-.dex-date { font-size: 12px; color: var(--ink-muted); margin: 8px 0 0; }
-.dex-locked-hint { font-size: 14px; color: var(--ink-muted); font-family: var(--hand); }
+.polaroid-caption {
+  margin: 6px 2px 2px; font-family: var(--hand); font-size: 15px; color: var(--ink);
+  text-align: center;
+}
 
-/* ===== AR 頁 UI 疊層（鏡頭畫面上的日誌卡片） ===== */
+.dex-card h3 { margin: 4px 0 0; font-size: 24px; font-weight: 900; letter-spacing: 2px; }
+.dex-species { color: var(--green); margin: 0; font-size: 14px; font-weight: 700; }
+.dex-hearts { margin: 8px 0 0; }
+.dex-card ul { margin: 8px 0; padding-left: 4px; font-size: 14px; line-height: 1.8; list-style: none; }
+.dex-card ul li::before { content: "✏️ "; }
+.dex-date { /* 日期戳章 */
+  display: inline-block; font-size: 12px; color: var(--amber-ink);
+  border: 1.5px dashed var(--amber-ink); border-radius: 6px;
+  padding: 3px 10px; margin: 10px 0 0; transform: rotate(-1.5deg);
+}
+.dex-release { margin-top: 14px; }
+.dex-emoji { font-size: 56px; }
+
+/* 鎖定＝還沒寫的頁 */
+.dex-card.locked {
+  background: rgba(253, 248, 236, 0.72);
+  border-style: dashed; border-color: var(--ink-soft);
+  box-shadow: none; text-align: center; padding: 28px 20px;
+}
+.dex-card.locked::before, .dex-card.locked::after { display: none; }
+.dex-card.locked .dex-emoji { opacity: 0.5; }
+.dex-card.locked h3 { color: var(--ink-soft); }
+.dex-locked-hint { font-size: 15px; color: var(--amber-ink); font-family: var(--hand); }
+
+/* ===== AR 頁 UI 疊層（鏡頭上的繪本元件） ===== */
 .ar-body { background: #000; }
 #ui {
   position: fixed; inset: 0; z-index: 10;
@@ -129,72 +269,107 @@ h1 {
 }
 .ui-btn {
   pointer-events: auto;
-  background: rgba(30, 32, 27, 0.62); color: #F5F2E8; text-decoration: none;
-  padding: 8px 14px; border-radius: 999px; font-size: 14px;
+  background: var(--cream); color: var(--ink); text-decoration: none;
+  border: 2px solid var(--ink);
+  padding: 7px 14px; border-radius: 999px; font-size: 14px; font-weight: 700;
+  box-shadow: 0 2px 0 rgba(58, 50, 38, 0.35);
 }
-.hearts { background: rgba(30, 32, 27, 0.62); padding: 8px 14px; border-radius: 999px; font-size: 16px; }
+.hearts {
+  background: var(--cream); border: 2px solid var(--ink);
+  padding: 7px 14px; border-radius: 999px; font-size: 16px;
+  box-shadow: 0 2px 0 rgba(58, 50, 38, 0.35);
+}
 /* iOS 動作感測權限按鈕（ar-game.js 動態插入，拿到 granted/denied 後移除） */
 .motion-btn {
   pointer-events: auto;
-  position: absolute; top: 60px; left: 50%; transform: translateX(-50%);
-  border: 1px solid var(--green-soft); cursor: pointer;
-}
-
-.hint {
-  margin: 8px auto 0; max-width: 85%;
-  background: rgba(30, 32, 27, 0.68); color: var(--amber-glow);
-  padding: 10px 18px; border-radius: 999px; font-size: 15px; text-align: center;
-}
-
-/* 對話框＝一張紙卡貼在畫面下緣（小遇的話寫在日誌上） */
-.dialog {
-  pointer-events: auto;
-  margin-top: auto; margin-bottom: 24px; align-self: center;
-  width: calc(100% - 32px); max-width: 480px;
-  background: rgba(253, 251, 243, 0.96); border: 1px solid var(--line);
-  border-left: 4px solid var(--green);
-  border-radius: 6px; padding: 14px 18px 10px; color: var(--ink);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  position: absolute; top: 62px; left: 50%; transform: translateX(-50%);
   cursor: pointer;
 }
-.dialog-name {
-  display: inline-block; background: var(--green); color: #F7F5EC; border-radius: 6px;
-  padding: 2px 10px; font-size: 13px; font-weight: 700; margin-bottom: 6px;
-  font-family: var(--serif); letter-spacing: 1px;
-}
-.dialog-text { margin: 4px 0; font-size: 17px; line-height: 1.7; min-height: 3.4em; }
-.dialog-next { text-align: right; font-size: 12px; color: var(--green); animation: blink 1.2s infinite; }
-@keyframes blink { 50% { opacity: 0.2; } }
 
-/* 默契測驗＝琥珀色的小考卷 */
-.quiz {
+/* 提示＝便利貼 */
+.hint {
+  margin: 10px auto 0; max-width: 85%;
+  background: #FFE9A8; color: var(--ink);
+  border: 2px solid var(--ink); border-radius: 10px;
+  padding: 9px 18px; font-size: 15px; font-weight: 700; text-align: center;
+  transform: rotate(-0.8deg);
+  box-shadow: 0 3px 0 rgba(58, 50, 38, 0.3);
+}
+
+/* 對話＝漫畫泡泡（尾巴朝上指向小遇） */
+.dialog {
   pointer-events: auto;
+  position: relative;
   margin-top: auto; margin-bottom: 24px; align-self: center;
   width: calc(100% - 32px); max-width: 480px;
-  background: rgba(253, 251, 243, 0.97); border: 1px solid var(--line);
-  border-left: 4px solid var(--amber-ink);
-  border-radius: 6px; padding: 16px 18px; color: var(--ink);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  background: var(--cream); border: 3px solid var(--ink);
+  border-radius: 20px; padding: 14px 18px 10px; color: var(--ink);
+  box-shadow: 0 5px 0 rgba(58, 50, 38, 0.35);
+  cursor: pointer;
+}
+.dialog::before { /* 泡泡尾巴 */
+  content: ""; position: absolute; top: -12px; left: 50%;
+  width: 20px; height: 20px; background: var(--cream);
+  border-left: 3px solid var(--ink); border-top: 3px solid var(--ink);
+  transform: translateX(-50%) rotate(45deg);
+}
+.dialog-name { /* 名牌貼紙 */
+  display: inline-block; background: var(--green); color: var(--cream);
+  border: 2px solid var(--ink); border-radius: 8px;
+  padding: 2px 12px; font-size: 13px; font-weight: 700; margin-bottom: 6px;
+  transform: rotate(-2deg);
+}
+.dialog-text { margin: 4px 0; font-size: 17px; line-height: 1.7; min-height: 3.4em; }
+.dialog-next { text-align: right; font-size: 12px; color: var(--green); font-weight: 700; animation: blink 1.2s infinite; }
+@keyframes blink { 50% { opacity: 0.2; } }
+
+/* 默契測驗＝小考卷 */
+.quiz {
+  pointer-events: auto;
+  position: relative;
+  margin-top: auto; margin-bottom: 24px; align-self: center;
+  width: calc(100% - 32px); max-width: 480px;
+  background: var(--paper); border: 3px solid var(--ink);
+  border-radius: 20px; padding: 20px 18px 16px; color: var(--ink);
+  box-shadow: 0 5px 0 rgba(58, 50, 38, 0.35);
+}
+.quiz::before { /* 考卷籤 */
+  content: "默契測驗"; position: absolute; top: -14px; left: 16px;
+  background: var(--sun); color: var(--ink);
+  border: 2px solid var(--ink); border-radius: 8px;
+  padding: 2px 12px; font-size: 12px; font-weight: 700;
+  transform: rotate(-3deg);
 }
 .quiz-question { margin: 0 0 12px; font-size: 17px; line-height: 1.6; }
 .quiz-options { display: flex; flex-direction: column; gap: 10px; }
 .quiz-btn {
-  padding: 13px; border-radius: 8px; border: 1px solid var(--amber-ink);
-  background: rgba(143, 99, 24, 0.07); color: var(--ink);
-  font-size: 16px; cursor: pointer;
+  padding: 13px; border-radius: 14px; border: 2.5px solid var(--ink);
+  background: var(--cream); color: var(--ink);
+  font-size: 16px; font-weight: 700; cursor: pointer;
+  box-shadow: 0 3px 0 rgba(58, 50, 38, 0.3);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
-.quiz-btn:active { background: rgba(143, 99, 24, 0.25); }
+.quiz-btn:active { transform: translateY(2px) scale(0.97); box-shadow: 0 1px 0 rgba(58, 50, 38, 0.3); }
 
-/* 新的一頁寫好了 */
+/* 收錄＝寫好的新頁（膠帶＋戳章標題） */
 .captured-panel {
   pointer-events: auto;
   position: absolute; inset: 0; margin: auto; height: fit-content;
   width: calc(100% - 48px); max-width: 400px;
-  background: rgba(253, 251, 243, 0.98); border: 1px solid var(--line);
-  border-radius: 8px; padding: 24px; color: var(--ink); text-align: center;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  background: var(--paper); border: 3px solid var(--ink);
+  border-radius: 20px; padding: 26px 24px 24px; color: var(--ink); text-align: center;
+  box-shadow: 0 8px 0 rgba(58, 50, 38, 0.35);
 }
-.captured-title { font-size: 24px; margin: 0 0 8px; font-family: var(--serif); color: var(--green); }
+.captured-panel::before, .captured-panel::after { /* 膠帶角 */
+  content: ""; position: absolute; top: -10px;
+  width: 64px; height: 20px; background: var(--tape); border-radius: 3px;
+}
+.captured-panel::before { left: 14px; transform: rotate(-8deg); }
+.captured-panel::after { right: 14px; transform: rotate(8deg); }
+.captured-title {
+  font-size: 26px; font-weight: 900; margin: 0 0 10px; color: var(--green);
+  letter-spacing: 2px;
+}
 
 .flash {
   position: absolute; inset: 0; background: #fff; opacity: 0;
@@ -202,7 +377,7 @@ h1 {
 }
 .flash.flash-on { opacity: 0.9; transition: opacity 0.15s; }
 
-/* ===== 載入層：翻開日誌的光暈 ===== */
+/* ===== 載入層：翻開日誌（小書翻頁動畫） ===== */
 .loading-layer, .scan-layer {
   position: absolute; inset: 0; z-index: 5;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -211,73 +386,116 @@ h1 {
 .loading-layer.off, .scan-layer.off { opacity: 0; }
 
 .loading-layer {
-  /* 夜色的墨綠紙——像闔上的日誌封面，中央透出琥珀光 */
   background: radial-gradient(ellipse at 50% 40%, #2A362E 0%, #1B211D 65%, #12160F 100%);
 }
-.compass { position: relative; width: 180px; height: 180px; }
-.compass-ring { position: absolute; border-radius: 50%; }
-.compass-outer {
-  inset: 0; border: 2px dashed rgba(124, 195, 164, 0.6);
-  animation: spin 14s linear infinite;
+.journal-book {
+  position: relative; width: 150px; height: 100px;
+  filter: drop-shadow(0 0 24px rgba(232, 188, 102, 0.5));
 }
-.compass-mid {
-  inset: 22px; border: 1px solid rgba(124, 195, 164, 0.4);
-  border-top-color: var(--amber-glow); border-bottom-color: var(--amber-glow);
-  animation: spin 8s linear infinite reverse;
+.book-half {
+  position: absolute; top: 0; bottom: 0; width: 50%;
+  background: var(--cream); border: 3px solid var(--ink);
 }
-.compass-inner {
-  inset: 46px; border: 2px solid rgba(232, 188, 102, 0.5);
-  border-left-color: transparent; border-right-color: transparent;
-  animation: spin 5s linear infinite;
-}
-.compass-core {
-  position: absolute; inset: 76px; border-radius: 50%;
-  background: var(--amber-glow); box-shadow: 0 0 24px 6px rgba(232, 188, 102, 0.55);
-  animation: breathe 1.8s ease-in-out infinite;
+.book-left { left: 0; border-radius: 10px 3px 3px 10px; border-right-width: 1.5px; }
+.book-right { right: 0; border-radius: 3px 10px 10px 3px; border-left-width: 1.5px; }
+.book-page { /* 翻動中的一頁 */
+  position: absolute; top: 6px; bottom: 6px; left: 50%; width: calc(50% - 8px);
+  background: #fff; border: 2px solid rgba(58, 50, 38, 0.5);
+  border-radius: 3px 8px 8px 3px;
+  transform-origin: left center;
 }
 .loading-text {
-  margin-top: 28px; color: #CFC9B4; font-size: 15px; letter-spacing: 4px;
-  font-family: var(--serif);
-  animation: breathe 1.8s ease-in-out infinite;
+  margin-top: 30px; color: var(--cream); font-size: 15px; letter-spacing: 4px; font-weight: 700;
 }
 .retry-btn {
   pointer-events: auto;
   margin-top: 24px; width: auto; padding: 12px 28px;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
-@keyframes breathe { 50% { opacity: 0.45; } }
 
-/* ===== 掃描層（尋找奇遇圖騰） ===== */
+/* ===== 掃描層：取景框＋星星 ===== */
 .scan-layer { pointer-events: none; }
 .vignette {
   position: absolute; inset: 0;
-  background: radial-gradient(ellipse at center, transparent 45%, rgba(18, 22, 15, 0.55) 100%);
+  background: radial-gradient(ellipse at center, transparent 45%, rgba(18, 22, 15, 0.5) 100%);
 }
 .seeker {
   position: relative; width: min(64vw, 300px); height: min(64vw, 300px);
 }
 .seeker-ring {
   position: absolute; inset: 12%;
-  border: 2px dashed rgba(124, 195, 164, 0.85); border-radius: 50%;
-  box-shadow: 0 0 18px rgba(124, 195, 164, 0.35), inset 0 0 18px rgba(124, 195, 164, 0.2);
-  animation: spin 12s linear infinite;
+  border: 3px dashed rgba(255, 248, 231, 0.9); border-radius: 50%;
+  box-shadow: 0 0 18px rgba(255, 248, 231, 0.3), inset 0 0 18px rgba(255, 248, 231, 0.15);
 }
 .corner {
-  position: absolute; width: 26px; height: 26px;
-  border-color: var(--amber-glow); border-style: solid; border-width: 0;
-  filter: drop-shadow(0 0 6px rgba(232, 188, 102, 0.7));
-  animation: breathe 2.2s ease-in-out infinite;
+  position: absolute; width: 30px; height: 30px;
+  border-color: var(--cream); border-style: solid; border-width: 0;
+  filter: drop-shadow(0 0 6px rgba(255, 248, 231, 0.6));
 }
-.c-tl { top: 0; left: 0; border-top-width: 3px; border-left-width: 3px; }
-.c-tr { top: 0; right: 0; border-top-width: 3px; border-right-width: 3px; }
-.c-bl { bottom: 0; left: 0; border-bottom-width: 3px; border-left-width: 3px; }
-.c-br { bottom: 0; right: 0; border-bottom-width: 3px; border-right-width: 3px; }
-.seeker-text {
-  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-  margin: 0; color: #F2E4C0; font-size: 15px; letter-spacing: 5px;
-  font-family: var(--serif);
-  text-shadow: 0 0 10px rgba(232, 188, 102, 0.6);
-  animation: breathe 2.2s ease-in-out infinite;
+.c-tl { top: 0; left: 0; border-top-width: 5px; border-left-width: 5px; border-top-left-radius: 10px; }
+.c-tr { top: 0; right: 0; border-top-width: 5px; border-right-width: 5px; border-top-right-radius: 10px; }
+.c-bl { bottom: 0; left: 0; border-bottom-width: 5px; border-left-width: 5px; border-bottom-left-radius: 10px; }
+.c-br { bottom: 0; right: 0; border-bottom-width: 5px; border-right-width: 5px; border-bottom-right-radius: 10px; }
+.seeker-text { /* 便利貼提示 */
+  position: absolute; left: 50%; bottom: -18px; transform: translateX(-50%) rotate(-1.5deg);
+  margin: 0; padding: 7px 16px;
+  background: #FFE9A8; color: var(--ink);
+  border: 2px solid var(--ink); border-radius: 10px;
+  font-size: 15px; font-weight: 700; letter-spacing: 3px; white-space: nowrap;
+  box-shadow: 0 3px 0 rgba(58, 50, 38, 0.3);
+}
+.spark { /* 漂浮小星星 */
+  position: absolute; font-size: 20px;
+  filter: drop-shadow(0 0 6px rgba(255, 201, 77, 0.8));
+}
+.spark-a { top: 4%; right: 12%; }
+.spark-b { bottom: 18%; left: 2%; font-size: 15px; }
+.spark-c { top: 30%; left: 14%; font-size: 12px; }
+
+/* ===== 動態（尊重減少動態偏好） ===== */
+@media (prefers-reduced-motion: no-preference) {
+  .cloud-a { animation: drift 26s ease-in-out infinite alternate; }
+  .cloud-b { animation: drift 34s ease-in-out infinite alternate-reverse; }
+  @keyframes drift { to { transform: translateX(9vw) scale(0.9); } }
+
+  .fox-bubble { animation: bob 3.2s ease-in-out infinite; }
+  @keyframes bob { 50% { transform: translateX(-50%) rotate(-1deg) translateY(-5px); } }
+
+  .menu .btn { animation: pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) backwards; }
+  .menu .btn:nth-child(1) { animation-delay: 0.05s; }
+  .menu .btn:nth-child(2) { animation-delay: 0.15s; }
+  .menu .btn:nth-child(3) { animation-delay: 0.25s; }
+  @keyframes pop-in { from { opacity: 0; transform: scale(0.7) translateY(16px); } }
+
+  .echo-note { animation: pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s backwards; }
+
+  .book-page { animation: flip 1.6s ease-in-out infinite; }
+  @keyframes flip {
+    0% { transform: rotateY(0deg); }
+    55% { transform: rotateY(-160deg); }
+    100% { transform: rotateY(-180deg); opacity: 0.4; }
+  }
+  .journal-book { perspective: 500px; }
+  .loading-text { animation: breathe 1.8s ease-in-out infinite; }
+  @keyframes breathe { 50% { opacity: 0.45; } }
+
+  .seeker-ring { animation: spin 14s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .corner { animation: breathe 2.2s ease-in-out infinite; }
+  .spark { animation: twinkle 1.8s ease-in-out infinite; }
+  .spark-b { animation-delay: 0.5s; }
+  .spark-c { animation-delay: 1s; }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.25; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.15); }
+  }
+
+  /* 收錄標題戳章（.hidden 拿掉、display 生效時觸發） */
+  .captured-title { animation: stamp 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) backwards; }
+  @keyframes stamp {
+    from { opacity: 0; transform: scale(2.4) rotate(-14deg); }
+    to { opacity: 1; transform: scale(1) rotate(0deg); }
+  }
+  .captured-panel { animation: pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) backwards; }
 }
 
 /* ===== 呼喚分身：AR 拍照互動頁 ===== */
@@ -317,36 +535,44 @@ h1 {
 }
 #photo-ui #topbar { pointer-events: none; }
 #photo-ui .ui-btn { pointer-events: auto; }
-.photo-hint {
-  margin: auto auto 0; padding: 6px 14px; border-radius: 999px;
-  background: rgba(30, 32, 27, 0.5); color: #F5F2E8;
-  font-size: 12px; letter-spacing: 1px;
+.photo-hint { /* 便利貼提示 */
+  margin: auto auto 0; padding: 7px 14px;
+  background: #FFE9A8; color: var(--ink);
+  border: 2px solid var(--ink); border-radius: 10px;
+  font-size: 12px; font-weight: 700; letter-spacing: 1px;
+  transform: rotate(-0.8deg);
+  box-shadow: 0 2px 0 rgba(58, 50, 38, 0.3);
 }
 #shutter-btn {
   pointer-events: auto;
   align-self: center;
-  margin: 12px auto calc(20px + env(safe-area-inset-bottom, 0px));
-  width: 72px; height: 72px; border-radius: 50%;
-  border: 4px solid #FDFBF3; background: rgba(253, 251, 243, 0.25);
+  margin: 14px auto calc(20px + env(safe-area-inset-bottom, 0px));
+  width: 74px; height: 74px; border-radius: 50%;
+  border: 5px solid var(--cream); background: rgba(255, 201, 77, 0.45);
+  box-shadow: 0 0 0 4px rgba(58, 50, 38, 0.4), 0 4px 0 4px rgba(58, 50, 38, 0.4);
   font-size: 30px; line-height: 1; cursor: pointer;
+  transition: transform 0.1s ease;
 }
-#shutter-btn:active { background: rgba(253, 251, 243, 0.55); }
+#shutter-btn:active { transform: scale(0.9); background: rgba(255, 201, 77, 0.8); }
 .photo-body .flash { position: fixed; z-index: 15; }
 
 .photo-overlay {
   position: fixed; inset: 0; z-index: 20;
   background: rgba(27, 33, 29, 0.95);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 14px; padding: 24px; text-align: center; color: #F5F2E8;
+  gap: 14px; padding: 24px; text-align: center; color: var(--cream);
 }
-.photo-overlay .btn { border-color: rgba(245, 242, 232, 0.5); background: rgba(245, 242, 232, 0.08); color: #F5F2E8; }
-.photo-overlay .btn-primary { border-color: var(--green); background: var(--green); }
+.photo-overlay .btn {
+  border-color: var(--cream); background: transparent; color: var(--cream);
+  box-shadow: none;
+}
+.photo-overlay .btn-primary { border-color: var(--ink); background: var(--green); }
 .photo-overlay.hidden { display: none; }
 .photo-overlay-text { margin: 0 0 8px; font-size: 16px; line-height: 1.8; }
 .photo-overlay-btn { width: auto; min-width: 220px; }
 #preview-img {
   max-width: 90vw; max-height: 60vh;
-  border-radius: 6px; border: 2px solid var(--green-soft);
+  border-radius: 10px; border: 3px solid var(--cream);
 }
 .preview-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
 .preview-actions .photo-overlay-btn { min-width: 0; padding: 12px 22px; }

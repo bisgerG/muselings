@@ -8,31 +8,33 @@
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/aframe-extras@7.5.4/dist/aframe-extras.min.js"></script>
   <!-- ?v= 版本參數：每次改版遞增，避免 GitHub Pages 快取讓新 HTML 配到舊 JS/CSS -->
-  <link rel="stylesheet" href="css/style.css?v=10">
+  <link rel="stylesheet" href="css/style.css?v=11">
 </head>
 <body class="ar-body">
 
   <!-- ===== HTML UI 疊層（對話框、任務提示、答題） ===== -->
   <div id="ui">
-    <!-- 載入層：翻開日誌的光暈（取代 MindAR 預設載入 UI） -->
+    <!-- 載入層：一本翻頁中的小書（取代 MindAR 預設載入 UI） -->
     <div id="loading-layer" class="loading-layer">
-      <div class="compass">
-        <div class="compass-ring compass-outer"></div>
-        <div class="compass-ring compass-mid"></div>
-        <div class="compass-ring compass-inner"></div>
-        <div class="compass-core"></div>
+      <div class="journal-book">
+        <div class="book-half book-left"></div>
+        <div class="book-half book-right"></div>
+        <div class="book-page"></div>
       </div>
       <p class="loading-text">正在翻開你的奇遇日誌……</p>
       <button id="retry-btn" class="btn btn-primary retry-btn hidden" onclick="location.reload()">重新載入</button>
     </div>
 
-    <!-- 掃描層：尋標環（取代 MindAR 預設白色掃描框） -->
+    <!-- 掃描層：繪本取景框＋星星（取代 MindAR 預設白色掃描框） -->
     <div id="scan-layer" class="scan-layer off">
       <div class="vignette"></div>
       <div class="seeker">
         <div class="seeker-ring"></div>
         <span class="corner c-tl"></span><span class="corner c-tr"></span>
         <span class="corner c-bl"></span><span class="corner c-br"></span>
+        <span class="spark spark-a">✨</span>
+        <span class="spark spark-b">✨</span>
+        <span class="spark spark-c">✨</span>
         <p class="seeker-text">尋找奇遇圖騰</p>
       </div>
     </div>
@@ -100,7 +102,7 @@
     </a-entity>
   </a-scene>
 
-  <script src="js/save.js?v=10"></script>
-  <script src="js/ar-game.js?v=10"></script>
+  <script src="js/save.js?v=11"></script>
+  <script src="js/ar-game.js?v=11"></script>
 </body>
 </html>

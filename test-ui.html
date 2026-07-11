@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>掃描介面預覽（開發用）</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=11">
   <style>
     body { background: #333; }
     .half { position: relative; height: 100vh; overflow: hidden; }
@@ -17,11 +17,10 @@
   <!-- 上半：載入層 -->
   <div class="half">
     <div class="loading-layer">
-      <div class="compass">
-        <div class="compass-ring compass-outer"></div>
-        <div class="compass-ring compass-mid"></div>
-        <div class="compass-ring compass-inner"></div>
-        <div class="compass-core"></div>
+      <div class="journal-book">
+        <div class="book-half book-left"></div>
+        <div class="book-half book-right"></div>
+        <div class="book-page"></div>
       </div>
       <p class="loading-text">正在翻開你的奇遇日誌……</p>
     </div>
@@ -35,6 +34,9 @@
         <div class="seeker-ring"></div>
         <span class="corner c-tl"></span><span class="corner c-tr"></span>
         <span class="corner c-bl"></span><span class="corner c-br"></span>
+        <span class="spark spark-a">✨</span>
+        <span class="spark spark-b">✨</span>
+        <span class="spark spark-c">✨</span>
         <p class="seeker-text">尋找奇遇圖騰</p>
       </div>
     </div>
