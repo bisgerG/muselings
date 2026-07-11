@@ -10,7 +10,7 @@
   function defaultSave() {
     return {
       schemaVersion: 1,
-      player: { title: '見習守護者', createdAt: new Date().toISOString() },
+      player: { title: '生活探索者', createdAt: new Date().toISOString() },
       dex: {},
       items: {}
     };

@@ -3,18 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>AR 任務｜哺乳動物區</title>
+  <title>奇遇中｜哺乳動物區</title>
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/aframe-extras@7.5.4/dist/aframe-extras.min.js"></script>
   <!-- ?v= 版本參數：每次改版遞增，避免 GitHub Pages 快取讓新 HTML 配到舊 JS/CSS -->
-  <link rel="stylesheet" href="css/style.css?v=9">
+  <link rel="stylesheet" href="css/style.css?v=10">
 </head>
 <body class="ar-body">
 
   <!-- ===== HTML UI 疊層（對話框、任務提示、答題） ===== -->
   <div id="ui">
-    <!-- 載入層：時光羅盤校準（取代 MindAR 預設載入 UI） -->
+    <!-- 載入層：翻開日誌的光暈（取代 MindAR 預設載入 UI） -->
     <div id="loading-layer" class="loading-layer">
       <div class="compass">
         <div class="compass-ring compass-outer"></div>
@@ -22,7 +22,7 @@
         <div class="compass-ring compass-inner"></div>
         <div class="compass-core"></div>
       </div>
-      <p class="loading-text">時光羅盤校準中……</p>
+      <p class="loading-text">正在翻開你的奇遇日誌……</p>
       <button id="retry-btn" class="btn btn-primary retry-btn hidden" onclick="location.reload()">重新載入</button>
     </div>
 
@@ -33,7 +33,7 @@
         <div class="seeker-ring"></div>
         <span class="corner c-tl"></span><span class="corner c-tr"></span>
         <span class="corner c-bl"></span><span class="corner c-br"></span>
-        <p class="seeker-text">搜尋時空裂縫</p>
+        <p class="seeker-text">尋找奇遇圖騰</p>
       </div>
     </div>
 
@@ -43,7 +43,7 @@
       <a class="ui-btn" href="dex.html">📖</a>
     </div>
 
-    <div id="hint" class="hint">請將鏡頭對準「時空裂縫」圖騰……</div>
+    <div id="hint" class="hint">把鏡頭對準「奇遇圖騰」，停下來看看……</div>
 
     <div id="dialog" class="dialog hidden">
       <div id="dialog-name" class="dialog-name"></div>
@@ -57,9 +57,9 @@
     </div>
 
     <div id="captured-panel" class="captured-panel hidden">
-      <p class="captured-title">✨ 收服成功！</p>
+      <p class="captured-title">📖 日誌新增了一頁！</p>
       <p id="captured-text"></p>
-      <a class="btn btn-primary" href="dex.html">查看我的圖鑑</a>
+      <a class="btn btn-primary" href="dex.html">翻開我的日誌</a>
     </div>
 
     <div id="flash" class="flash"></div>
@@ -100,7 +100,7 @@
     </a-entity>
   </a-scene>
 
-  <script src="js/save.js?v=9"></script>
-  <script src="js/ar-game.js?v=9"></script>
+  <script src="js/save.js?v=10"></script>
+  <script src="js/ar-game.js?v=10"></script>
 </body>
 </html>

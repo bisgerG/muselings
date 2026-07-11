@@ -54,19 +54,19 @@
     if (!entry || !entry.model) throw new Error('此精靈沒有可放出的模型：' + id);
   } catch (e) {
     console.error('[photo] 載入失敗', e);
-    fatal('載入精靈資料失敗，請回圖鑑再試一次。');
+    fatal('載入資料失敗，請回日誌再試一次。');
     return;
   }
 
-  // 沒收服過就不能放出來（分享網址直開也擋）
+  // 分身還沒住進日誌就不能呼喚（分享網址直開也擋）
   if (!MuselingSave.isUnlocked(entry.id)) {
-    fatal(UI.notCapturedError || '還沒喚醒這隻博物之靈，先去展區找到牠吧！');
+    fatal(UI.notCapturedError || '牠的分身還沒住進你的日誌——先去現場找到牠、聽聽牠的故事吧！');
     return;
   }
 
   mv.setAttribute('src', entry.model); // setAttribute 在元件升級前也有效
   titleEl.textContent = entry.name;
-  document.title = '放出' + entry.name + '｜時空守護者';
+  document.title = '和' + entry.name + '玩｜奇遇日誌';
 
   // 模型載入後挑 idle 動畫（clip 名稱含 smell 者優先，找不到用第一段）
   mv.addEventListener('load', () => {

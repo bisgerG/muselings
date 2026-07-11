@@ -1,71 +1,120 @@
-/* ===== 共用 ===== */
+/* ===== 奇遇日誌 視覺系統 =====
+   世界觀：一本會發光的旅行手札。
+   亮面頁（首頁/日誌/圖騰）＝暖紙頁；AR/拍照頁的 UI ＝貼在鏡頭畫面上的日誌卡片。
+   色彩：紙 #F5F2E8｜墨 #2B2A24｜榕樹綠 #37715B（主）｜爐火琥珀 #8F6318（艾可手寫/點綴）
+   字體：標題走宋體（手札感）、艾可筆記走楷體（手寫字設定）、內文系統黑體 */
+:root {
+  --paper: #F5F2E8;
+  --paper-card: #FDFBF3;
+  --ink: #2B2A24;
+  --ink-muted: #6D6A5C;
+  --green: #37715B;
+  --green-soft: #7CC3A4;   /* 深色鏡頭疊層上的綠 */
+  --amber-ink: #8F6318;    /* 紙上的琥珀（夠深，可讀） */
+  --amber-glow: #E8BC66;   /* 鏡頭疊層上的琥珀光 */
+  --line: #DAD4BF;
+  --danger: #9C4A3A;
+  --serif: "Songti TC", "Noto Serif TC", "PMingLiU", serif;
+  --hand: "Kaiti TC", "DFKai-SB", "BiauKai", "Songti TC", serif;
+}
+
 * { box-sizing: border-box; }
 body {
   margin: 0;
-  font-family: "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
-  color: #1f2a24;
+  font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  color: var(--ink);
 }
 
-/* ===== 一般頁面（首頁/圖鑑/Marker） ===== */
+/* ===== 一般頁面（首頁/日誌/圖騰）＝紙頁 ===== */
 .page {
-  background: linear-gradient(160deg, #0e2a3a 0%, #1c4a4a 60%, #2c6e49 100%);
+  /* 紙面＋極淡的橫線，像手札內頁 */
+  background:
+    repeating-linear-gradient(180deg, transparent 0 31px, rgba(43, 42, 36, 0.045) 31px 32px),
+    var(--paper);
   min-height: 100vh;
-  color: #f0f7f2;
+  color: var(--ink);
 }
 .landing { max-width: 480px; margin: 0 auto; padding: 32px 20px 48px; text-align: center; }
 .badge {
   display: inline-block; font-size: 12px; letter-spacing: 2px;
-  border: 1px solid #7fd1ae; color: #7fd1ae; border-radius: 999px; padding: 4px 12px;
+  border: 1px solid var(--amber-ink); color: var(--amber-ink);
+  border-radius: 999px; padding: 4px 12px; background: var(--paper-card);
 }
-h1 { margin: 12px 0 4px; font-size: 34px; letter-spacing: 6px; }
-.subtitle { margin: 0 0 24px; color: #a8d5bc; letter-spacing: 3px; }
+h1 {
+  margin: 14px 0 4px; font-size: 34px; letter-spacing: 6px;
+  font-family: var(--serif); font-weight: 700; color: var(--ink);
+}
+.subtitle { margin: 0 0 24px; color: var(--ink-muted); letter-spacing: 2px; font-family: var(--serif); }
 
 .story-card, .note-card {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 16px; padding: 16px 20px; margin: 16px 0;
-  text-align: left; line-height: 1.8; font-size: 15px;
+  background: var(--paper-card);
+  border: 1px solid var(--line);
+  border-radius: 6px; padding: 16px 20px; margin: 16px 0;
+  text-align: left; line-height: 1.85; font-size: 15px;
+  box-shadow: 0 1px 3px rgba(43, 42, 36, 0.08);
 }
-.note-card h2 { font-size: 16px; margin: 0 0 8px; color: #7fd1ae; }
+.story-card strong { color: var(--green); }
+.note-card h2 {
+  font-size: 15px; margin: 0 0 8px; color: var(--green);
+  font-family: var(--serif); letter-spacing: 2px;
+}
 .note-card ol { margin: 0; padding-left: 20px; }
-.note-card a { color: #7fd1ae; }
-.note-card code { background: rgba(0,0,0,0.3); padding: 1px 6px; border-radius: 4px; }
+.note-card a { color: var(--green); }
+.note-card code { background: rgba(43, 42, 36, 0.08); padding: 1px 6px; border-radius: 4px; }
+
+/* 艾可的頁緣手寫筆記：楷體＋琥珀墨＋虛線框（世界觀：前任主人留下的字跡） */
+.echo-note {
+  margin: 16px 0; padding: 10px 18px;
+  border: 1px dashed var(--amber-ink); border-radius: 6px;
+  font-family: var(--hand); font-size: 17px; line-height: 1.9;
+  color: var(--amber-ink); text-align: left;
+  background: transparent;
+  transform: rotate(-0.4deg); /* 微傾，像隨手貼上的一頁 */
+}
+.echo-note p { margin: 0; }
 
 .menu { display: flex; flex-direction: column; gap: 12px; margin: 24px 0; }
 .btn {
-  display: block; width: 100%; padding: 14px; border-radius: 12px;
-  background: rgba(255, 255, 255, 0.12); color: #f0f7f2;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: block; width: 100%; padding: 14px; border-radius: 10px;
+  background: var(--paper-card); color: var(--ink);
+  border: 1px solid var(--ink);
   text-decoration: none; font-size: 16px; cursor: pointer; text-align: center;
 }
-.btn-primary { background: #2c9c6a; border-color: #2c9c6a; font-weight: 700; }
-.btn-danger { background: transparent; border-color: #d9777c; color: #d9777c; font-size: 13px; }
+.btn-primary { background: var(--green); border-color: var(--green); color: #F7F5EC; font-weight: 700; }
+.btn-danger { background: transparent; border-color: var(--danger); color: var(--danger); font-size: 13px; }
 
-.marker-frame { background: #fff; border-radius: 16px; padding: 16px; margin: 8px 0; }
+.marker-frame {
+  background: #fff; border-radius: 6px; padding: 16px; margin: 8px 0;
+  border: 1px solid var(--line); box-shadow: 0 1px 3px rgba(43, 42, 36, 0.08);
+}
 .marker-img { width: 100%; max-width: 360px; display: block; margin: 0 auto; }
 
-/* ===== 圖鑑 ===== */
+/* ===== 日誌（圖鑑）：每張卡＝手札的一頁 ===== */
 .dex-list { display: flex; flex-direction: column; gap: 16px; margin-top: 8px; }
 .dex-card {
-  background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 16px; padding: 20px; text-align: left;
+  background: var(--paper-card); border: 1px solid var(--line);
+  border-radius: 6px; padding: 20px; text-align: left;
+  box-shadow: 0 1px 3px rgba(43, 42, 36, 0.08);
 }
-.dex-card.locked { opacity: 0.55; }
-.dex-card h3 { margin: 4px 0; font-size: 22px; }
+.dex-card.locked {
+  background: transparent; border-style: dashed; box-shadow: none;
+  color: var(--ink-muted);
+}
+.dex-card h3 { margin: 4px 0; font-size: 22px; font-family: var(--serif); }
 .dex-card ul { margin: 8px 0; padding-left: 20px; font-size: 14px; line-height: 1.7; }
 .dex-emoji { font-size: 40px; }
 .dex-viewer {
-  width: 100%; height: 240px; border-radius: 12px;
-  background: radial-gradient(ellipse at 50% 60%, rgba(127, 209, 174, 0.14), rgba(8, 26, 38, 0.35));
+  width: 100%; height: 240px; border-radius: 6px;
+  background: radial-gradient(ellipse at 50% 60%, rgba(55, 113, 91, 0.12), rgba(43, 42, 36, 0.05));
   --poster-color: transparent;
 }
-.dex-species { color: #a8d5bc; margin: 0; font-size: 14px; }
+.dex-species { color: var(--green); margin: 0; font-size: 14px; }
 .dex-release { margin-top: 12px; }
 .dex-hearts { margin: 6px 0 0; }
-.dex-date { font-size: 12px; color: #8fb8a0; margin: 8px 0 0; }
-.dex-locked-hint { font-size: 14px; color: #a8d5bc; }
+.dex-date { font-size: 12px; color: var(--ink-muted); margin: 8px 0 0; }
+.dex-locked-hint { font-size: 14px; color: var(--ink-muted); font-family: var(--hand); }
 
-/* ===== AR 頁 UI 疊層 ===== */
+/* ===== AR 頁 UI 疊層（鏡頭畫面上的日誌卡片） ===== */
 .ar-body { background: #000; }
 #ui {
   position: fixed; inset: 0; z-index: 10;
@@ -80,63 +129,72 @@ h1 { margin: 12px 0 4px; font-size: 34px; letter-spacing: 6px; }
 }
 .ui-btn {
   pointer-events: auto;
-  background: rgba(0, 0, 0, 0.55); color: #fff; text-decoration: none;
+  background: rgba(30, 32, 27, 0.62); color: #F5F2E8; text-decoration: none;
   padding: 8px 14px; border-radius: 999px; font-size: 14px;
 }
-.hearts { background: rgba(0, 0, 0, 0.55); padding: 8px 14px; border-radius: 999px; font-size: 16px; }
+.hearts { background: rgba(30, 32, 27, 0.62); padding: 8px 14px; border-radius: 999px; font-size: 16px; }
 /* iOS 動作感測權限按鈕（ar-game.js 動態插入，拿到 granted/denied 後移除） */
 .motion-btn {
   pointer-events: auto;
   position: absolute; top: 60px; left: 50%; transform: translateX(-50%);
-  border: 1px solid #7fd1ae; cursor: pointer;
+  border: 1px solid var(--green-soft); cursor: pointer;
 }
 
 .hint {
   margin: 8px auto 0; max-width: 85%;
-  background: rgba(0, 0, 0, 0.6); color: #ffe9a8;
+  background: rgba(30, 32, 27, 0.68); color: var(--amber-glow);
   padding: 10px 18px; border-radius: 999px; font-size: 15px; text-align: center;
 }
 
+/* 對話框＝一張紙卡貼在畫面下緣（小遇的話寫在日誌上） */
 .dialog {
   pointer-events: auto;
   margin-top: auto; margin-bottom: 24px; align-self: center;
   width: calc(100% - 32px); max-width: 480px;
-  background: rgba(10, 30, 25, 0.88); border: 2px solid #7fd1ae;
-  border-radius: 16px; padding: 14px 18px 10px; color: #fff;
+  background: rgba(253, 251, 243, 0.96); border: 1px solid var(--line);
+  border-left: 4px solid var(--green);
+  border-radius: 6px; padding: 14px 18px 10px; color: var(--ink);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
   cursor: pointer;
 }
 .dialog-name {
-  display: inline-block; background: #2c9c6a; border-radius: 8px;
+  display: inline-block; background: var(--green); color: #F7F5EC; border-radius: 6px;
   padding: 2px 10px; font-size: 13px; font-weight: 700; margin-bottom: 6px;
+  font-family: var(--serif); letter-spacing: 1px;
 }
 .dialog-text { margin: 4px 0; font-size: 17px; line-height: 1.7; min-height: 3.4em; }
-.dialog-next { text-align: right; font-size: 12px; color: #7fd1ae; animation: blink 1.2s infinite; }
+.dialog-next { text-align: right; font-size: 12px; color: var(--green); animation: blink 1.2s infinite; }
 @keyframes blink { 50% { opacity: 0.2; } }
 
+/* 默契測驗＝琥珀色的小考卷 */
 .quiz {
   pointer-events: auto;
   margin-top: auto; margin-bottom: 24px; align-self: center;
   width: calc(100% - 32px); max-width: 480px;
-  background: rgba(10, 30, 25, 0.92); border: 2px solid #ffd166;
-  border-radius: 16px; padding: 16px 18px; color: #fff;
+  background: rgba(253, 251, 243, 0.97); border: 1px solid var(--line);
+  border-left: 4px solid var(--amber-ink);
+  border-radius: 6px; padding: 16px 18px; color: var(--ink);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
 }
 .quiz-question { margin: 0 0 12px; font-size: 17px; line-height: 1.6; }
 .quiz-options { display: flex; flex-direction: column; gap: 10px; }
 .quiz-btn {
-  padding: 13px; border-radius: 12px; border: 1px solid #ffd166;
-  background: rgba(255, 209, 102, 0.12); color: #ffd166;
+  padding: 13px; border-radius: 8px; border: 1px solid var(--amber-ink);
+  background: rgba(143, 99, 24, 0.07); color: var(--ink);
   font-size: 16px; cursor: pointer;
 }
-.quiz-btn:active { background: rgba(255, 209, 102, 0.35); }
+.quiz-btn:active { background: rgba(143, 99, 24, 0.25); }
 
+/* 新的一頁寫好了 */
 .captured-panel {
   pointer-events: auto;
   position: absolute; inset: 0; margin: auto; height: fit-content;
   width: calc(100% - 48px); max-width: 400px;
-  background: rgba(10, 30, 25, 0.95); border: 2px solid #ffd166;
-  border-radius: 20px; padding: 24px; color: #fff; text-align: center;
+  background: rgba(253, 251, 243, 0.98); border: 1px solid var(--line);
+  border-radius: 8px; padding: 24px; color: var(--ink); text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
 }
-.captured-title { font-size: 24px; margin: 0 0 8px; }
+.captured-title { font-size: 24px; margin: 0 0 8px; font-family: var(--serif); color: var(--green); }
 
 .flash {
   position: absolute; inset: 0; background: #fff; opacity: 0;
@@ -144,7 +202,7 @@ h1 { margin: 12px 0 4px; font-size: 34px; letter-spacing: 6px; }
 }
 .flash.flash-on { opacity: 0.9; transition: opacity 0.15s; }
 
-/* ===== 時光羅盤：載入層 ===== */
+/* ===== 載入層：翻開日誌的光暈 ===== */
 .loading-layer, .scan-layer {
   position: absolute; inset: 0; z-index: 5;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -153,31 +211,33 @@ h1 { margin: 12px 0 4px; font-size: 34px; letter-spacing: 6px; }
 .loading-layer.off, .scan-layer.off { opacity: 0; }
 
 .loading-layer {
-  background: radial-gradient(ellipse at 50% 40%, #1c4a4a 0%, #0e2a3a 65%, #081a26 100%);
+  /* 夜色的墨綠紙——像闔上的日誌封面，中央透出琥珀光 */
+  background: radial-gradient(ellipse at 50% 40%, #2A362E 0%, #1B211D 65%, #12160F 100%);
 }
 .compass { position: relative; width: 180px; height: 180px; }
 .compass-ring { position: absolute; border-radius: 50%; }
 .compass-outer {
-  inset: 0; border: 2px dashed rgba(127, 209, 174, 0.7);
+  inset: 0; border: 2px dashed rgba(124, 195, 164, 0.6);
   animation: spin 14s linear infinite;
 }
 .compass-mid {
-  inset: 22px; border: 1px solid rgba(127, 209, 174, 0.45);
-  border-top-color: #ffd166; border-bottom-color: #ffd166;
+  inset: 22px; border: 1px solid rgba(124, 195, 164, 0.4);
+  border-top-color: var(--amber-glow); border-bottom-color: var(--amber-glow);
   animation: spin 8s linear infinite reverse;
 }
 .compass-inner {
-  inset: 46px; border: 2px solid rgba(255, 209, 102, 0.5);
+  inset: 46px; border: 2px solid rgba(232, 188, 102, 0.5);
   border-left-color: transparent; border-right-color: transparent;
   animation: spin 5s linear infinite;
 }
 .compass-core {
   position: absolute; inset: 76px; border-radius: 50%;
-  background: #ffd166; box-shadow: 0 0 24px 6px rgba(255, 209, 102, 0.55);
+  background: var(--amber-glow); box-shadow: 0 0 24px 6px rgba(232, 188, 102, 0.55);
   animation: breathe 1.8s ease-in-out infinite;
 }
 .loading-text {
-  margin-top: 28px; color: #a8d5bc; font-size: 15px; letter-spacing: 4px;
+  margin-top: 28px; color: #CFC9B4; font-size: 15px; letter-spacing: 4px;
+  font-family: var(--serif);
   animation: breathe 1.8s ease-in-out infinite;
 }
 .retry-btn {
@@ -187,25 +247,25 @@ h1 { margin: 12px 0 4px; font-size: 34px; letter-spacing: 6px; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes breathe { 50% { opacity: 0.45; } }
 
-/* ===== 時光羅盤：掃描層（尋標環） ===== */
+/* ===== 掃描層（尋找奇遇圖騰） ===== */
 .scan-layer { pointer-events: none; }
 .vignette {
   position: absolute; inset: 0;
-  background: radial-gradient(ellipse at center, transparent 45%, rgba(8, 26, 38, 0.55) 100%);
+  background: radial-gradient(ellipse at center, transparent 45%, rgba(18, 22, 15, 0.55) 100%);
 }
 .seeker {
   position: relative; width: min(64vw, 300px); height: min(64vw, 300px);
 }
 .seeker-ring {
   position: absolute; inset: 12%;
-  border: 2px dashed rgba(127, 209, 174, 0.85); border-radius: 50%;
-  box-shadow: 0 0 18px rgba(127, 209, 174, 0.35), inset 0 0 18px rgba(127, 209, 174, 0.2);
+  border: 2px dashed rgba(124, 195, 164, 0.85); border-radius: 50%;
+  box-shadow: 0 0 18px rgba(124, 195, 164, 0.35), inset 0 0 18px rgba(124, 195, 164, 0.2);
   animation: spin 12s linear infinite;
 }
 .corner {
   position: absolute; width: 26px; height: 26px;
-  border-color: #ffd166; border-style: solid; border-width: 0;
-  filter: drop-shadow(0 0 6px rgba(255, 209, 102, 0.7));
+  border-color: var(--amber-glow); border-style: solid; border-width: 0;
+  filter: drop-shadow(0 0 6px rgba(232, 188, 102, 0.7));
   animation: breathe 2.2s ease-in-out infinite;
 }
 .c-tl { top: 0; left: 0; border-top-width: 3px; border-left-width: 3px; }
@@ -214,16 +274,18 @@ h1 { margin: 12px 0 4px; font-size: 34px; letter-spacing: 6px; }
 .c-br { bottom: 0; right: 0; border-bottom-width: 3px; border-right-width: 3px; }
 .seeker-text {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-  margin: 0; color: #ffe9a8; font-size: 15px; letter-spacing: 5px;
-  text-shadow: 0 0 10px rgba(255, 209, 102, 0.6);
+  margin: 0; color: #F2E4C0; font-size: 15px; letter-spacing: 5px;
+  font-family: var(--serif);
+  text-shadow: 0 0 10px rgba(232, 188, 102, 0.6);
   animation: breathe 2.2s ease-in-out infinite;
 }
 
-/* ===== 放出精靈：AR 拍照互動頁 ===== */
+/* ===== 呼喚分身：AR 拍照互動頁 ===== */
 .photo-body { background: #000; height: 100vh; overflow: hidden; }
 .photo-body .hidden { display: none !important; }
 .photo-body.nocam {
-  background: linear-gradient(160deg, #0e2a3a 0%, #1c4a4a 60%, #2c6e49 100%);
+  /* 下午四點的光：無相機時的漸層背景 */
+  background: linear-gradient(165deg, #43604F 0%, #7C9469 55%, #D9BC77 100%);
 }
 #cam {
   position: fixed; inset: 0; width: 100%; height: 100%;
@@ -257,7 +319,7 @@ h1 { margin: 12px 0 4px; font-size: 34px; letter-spacing: 6px; }
 #photo-ui .ui-btn { pointer-events: auto; }
 .photo-hint {
   margin: auto auto 0; padding: 6px 14px; border-radius: 999px;
-  background: rgba(0, 0, 0, 0.45); color: #f0f7f2;
+  background: rgba(30, 32, 27, 0.5); color: #F5F2E8;
   font-size: 12px; letter-spacing: 1px;
 }
 #shutter-btn {
@@ -265,24 +327,26 @@ h1 { margin: 12px 0 4px; font-size: 34px; letter-spacing: 6px; }
   align-self: center;
   margin: 12px auto calc(20px + env(safe-area-inset-bottom, 0px));
   width: 72px; height: 72px; border-radius: 50%;
-  border: 4px solid #fff; background: rgba(255, 255, 255, 0.25);
+  border: 4px solid #FDFBF3; background: rgba(253, 251, 243, 0.25);
   font-size: 30px; line-height: 1; cursor: pointer;
 }
-#shutter-btn:active { background: rgba(255, 255, 255, 0.55); }
+#shutter-btn:active { background: rgba(253, 251, 243, 0.55); }
 .photo-body .flash { position: fixed; z-index: 15; }
 
 .photo-overlay {
   position: fixed; inset: 0; z-index: 20;
-  background: rgba(8, 26, 38, 0.94);
+  background: rgba(27, 33, 29, 0.95);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 14px; padding: 24px; text-align: center; color: #f0f7f2;
+  gap: 14px; padding: 24px; text-align: center; color: #F5F2E8;
 }
+.photo-overlay .btn { border-color: rgba(245, 242, 232, 0.5); background: rgba(245, 242, 232, 0.08); color: #F5F2E8; }
+.photo-overlay .btn-primary { border-color: var(--green); background: var(--green); }
 .photo-overlay.hidden { display: none; }
 .photo-overlay-text { margin: 0 0 8px; font-size: 16px; line-height: 1.8; }
 .photo-overlay-btn { width: auto; min-width: 220px; }
 #preview-img {
   max-width: 90vw; max-height: 60vh;
-  border-radius: 12px; border: 2px solid #7fd1ae;
+  border-radius: 6px; border: 2px solid var(--green-soft);
 }
 .preview-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
 .preview-actions .photo-overlay-btn { min-width: 0; padding: 12px 22px; }

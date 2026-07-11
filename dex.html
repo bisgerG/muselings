@@ -3,25 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>互動圖鑑｜時空守護者</title>
+  <title>我的日誌｜奇遇日誌</title>
   <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
-  <link rel="stylesheet" href="css/style.css?v=9">
+  <link rel="stylesheet" href="css/style.css?v=10">
 </head>
 <body class="page">
   <main class="landing">
-    <h1>互動圖鑑</h1>
+    <h1>我的日誌</h1>
     <p class="subtitle" id="dex-progress"></p>
 
     <div id="dex-list" class="dex-list"></div>
 
+    <aside class="echo-note">
+      <p>日誌的下一頁，永遠是空白的。　——艾可</p>
+    </aside>
+
     <nav class="menu">
-      <a class="btn btn-primary" href="ar.html">🔮 繼續任務</a>
+      <a class="btn btn-primary" href="ar.html">🔍 繼續探索</a>
       <a class="btn" href="index.html">← 回首頁</a>
       <button class="btn btn-danger" id="reset-btn">清除進度（測試用）</button>
     </nav>
   </main>
 
-  <script src="js/save.js?v=9"></script>
+  <script src="js/save.js?v=10"></script>
   <script>
     // 圖鑑由 data/muselings.json 總表驅動；文案在總表的 ui 區塊（配合日後劇情整包置換）
     (async function () {
@@ -46,7 +50,7 @@
         registry = await res.json();
       } catch (e) {
         console.error('[dex] 總表載入失敗', e);
-        listEl.appendChild(el('p', 'dex-locked-hint', '圖鑑資料載入失敗，請重新整理再試。'));
+        listEl.appendChild(el('p', 'dex-locked-hint', '日誌翻不開……請重新整理再試一次。'));
         return;
       }
       const UI = registry.ui || {};
@@ -96,7 +100,7 @@
           card.appendChild(el('h3', null, UI.lockedName || '？？？'));
           card.appendChild(el('p', 'dex-species',
             m.zone + (m.comingSoon ? (UI.comingSoonSuffix || '') : '')));
-          card.appendChild(el('p', 'dex-locked-hint', UI.lockedHint || '尚未喚醒這隻博物之靈'));
+          card.appendChild(el('p', 'dex-locked-hint', UI.lockedHint || '這一頁還空著……'));
         }
         listEl.appendChild(card);
       });

@@ -1,7 +1,7 @@
 /**
  * ar-game.js — MVP 核心迴圈狀態機
  * scanning → intro（登場對話）→ pet（撫摸互動）→ knowledge（科普對話）
- * → quiz（收服考驗）→ captured（收錄圖鑑）
+ * → quiz（默契測驗）→ captured（分身住進日誌）
  *
  * 精靈與文案由 data/muselings.json 總表驅動：
  * ar.html?spirit=<id>（預設 defaultSpirit），劇情內容在各精靈的 script JSON。
@@ -78,7 +78,7 @@
   }
   if (debugEl) setInterval(renderDebug, 500);
 
-  // --- 自製時光羅盤 UI：AR 引擎就緒後收起載入層、亮起尋標環 ---
+  // --- 自製載入/掃描 UI：AR 引擎就緒後收起載入層、亮起尋標環 ---
   // 監聽必須在任何 await 之前註冊，避免錯過 MindAR 的事件
   let fatalLoadError = false;
   sceneEl.addEventListener('arReady', () => {
@@ -88,7 +88,7 @@
   });
   sceneEl.addEventListener('arError', () => {
     if (fatalLoadError) return; // 同上：載入失敗的訊息優先
-    loadingTextEl.textContent = UI.arError || '羅盤失靈了……請確認相機權限後重新整理';
+    loadingTextEl.textContent = UI.arError || '鏡頭打不開……請確認相機權限後重新整理';
   });
 
   // Marker 追蹤事件可能發生在資料載入完成前（玩家已先對準圖騰）——
@@ -128,10 +128,10 @@
     if (entry.comingSoon) {
       // 尚未開放的精靈：擋掉分享網址直開，避免對著空氣玩完還解鎖圖鑑
       fatalLoadError = true;
-      loadingTextEl.textContent = UI.comingSoonError || '這隻博物之靈還在沉睡，展區尚未開放……';
+      loadingTextEl.textContent = UI.comingSoonError || '這隻小遇的章節還沒開放……先去找其他朋友吧！';
       return;
     }
-    document.title = 'AR 任務｜' + entry.zone;
+    document.title = '奇遇中｜' + entry.zone;
     // 先掛模型 src，讓 834KB 的 GLB 與後續劇本下載並行，縮短登場時的隱形空窗
     if (entry.model) spiritModel.setAttribute('src', entry.model);
     data = await fetchJson(entry.script);
@@ -439,7 +439,7 @@
   // 點擊事件會從被點到的幾何體冒泡到 #spirit
   spirit.addEventListener('click', onSpiritClicked);
 
-  // --- 收服考驗：選項每次洗牌，連錯兩次先重播知識點再重出題 ---
+  // --- 默契測驗：選項每次洗牌，連錯兩次先重播知識點再重出題 ---
   let quizWrongCount = 0;
 
   function startQuiz() {
@@ -469,13 +469,14 @@
       return;
     }
     quizWrongCount++;
+    // 答錯提示由小遇本人說（默契測驗是「你們之間的事」，不假手引導者）
     if (quizWrongCount >= 2) {
       quizWrongCount = 0;
       showDialog([data.quiz.wrongHint],
         () => showDialog(data.knowledge, startQuiz),
-        UI.guideName);
+        data.name);
     } else {
-      showDialog([data.quiz.wrongHint], startQuiz, UI.guideName);
+      showDialog([data.quiz.wrongHint], startQuiz, data.name);
     }
   }
 
@@ -490,7 +491,7 @@
       flashEl.classList.remove('flash-on');
       showDialog([data.quiz.correct, data.captured, data.nextHint], () => {
         capturedTextEl.textContent = fmt(UI.capturedLabel, entry) ||
-          (entry.name + '（' + entry.species + '）已收錄！');
+          (entry.name + '（' + entry.species + '）的故事分身，住進你的日誌了！');
         capturedPanelEl.classList.remove('hidden');
       });
     }, 1000);
@@ -510,10 +511,10 @@
     if (state === 'scanning') scanLayerEl.classList.remove('off');
   }
 
-  // 已收服過 → 直接提示（重複遊玩仍可再互動，僅提示已收錄）
+  // 分身已在日誌 → 直接提示（重複遊玩仍可再互動，僅提示已收錄）
   if (MuselingSave.isUnlocked(entry.id)) {
     setHint(fmt(UI.alreadyCaptured, entry) ||
-      ('你已收服過' + entry.name + '囉！對準圖騰可以再找牠玩。'));
+      (entry.name + '的分身已經住在你的日誌裡囉！對準圖騰，可以再找本尊玩。'));
   }
 
   // 資料就緒：回放載入期間發生的辨識事件（玩家可能早就對準了圖騰）

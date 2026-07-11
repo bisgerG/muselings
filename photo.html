@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>放出精靈｜時空守護者</title>
+  <title>呼喚分身｜奇遇日誌</title>
   <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
-  <link rel="stylesheet" href="css/style.css?v=9">
+  <link rel="stylesheet" href="css/style.css?v=10">
 </head>
 <body class="photo-body">
   <!-- 相機背景（?nocam 時隱藏改用漸層） -->
@@ -25,11 +25,11 @@
   <!-- UI 疊層 -->
   <div id="photo-ui">
     <div id="topbar">
-      <a class="ui-btn" href="dex.html">← 回圖鑑</a>
+      <a class="ui-btn" href="dex.html">← 回日誌</a>
       <span id="photo-title" class="ui-btn"></span>
       <span></span>
     </div>
-    <p class="photo-hint">按住精靈拖曳＝移動．空白處拖曳＝旋轉．雙指＝縮放</p>
+    <p class="photo-hint">按住分身拖曳＝移動．空白處拖曳＝旋轉．雙指＝縮放</p>
     <button id="shutter-btn" aria-label="拍照">📸</button>
   </div>
 
@@ -37,15 +37,15 @@
 
   <!-- 開啟相機（iOS 需要使用者手勢後才能穩定啟動相機） -->
   <div id="start-overlay" class="photo-overlay">
-    <p class="photo-overlay-text">要把精靈放出來玩，需要開啟相機。<br>不開相機也可以在漸層背景上互動與拍照。</p>
+    <p class="photo-overlay-text">要呼喚分身出來玩，需要開啟相機。<br>不開相機也可以在漸層背景上互動與拍照。</p>
     <button id="start-btn" class="btn btn-primary photo-overlay-btn">📷 開啟相機</button>
-    <button id="skip-cam-btn" class="btn photo-overlay-btn">不用相機，直接放出來</button>
-    <a class="btn photo-overlay-btn" href="dex.html">← 回圖鑑</a>
+    <button id="skip-cam-btn" class="btn photo-overlay-btn">不用相機，直接呼喚</button>
+    <a class="btn photo-overlay-btn" href="dex.html">← 回日誌</a>
   </div>
 
   <!-- 拍照結果 -->
   <div id="preview-overlay" class="photo-overlay hidden">
-    <img id="preview-img" alt="與精靈的合照">
+    <img id="preview-img" alt="與分身的合照">
     <div class="preview-actions">
       <button id="share-btn" class="btn btn-primary photo-overlay-btn">分享</button>
       <a id="download-link" class="btn photo-overlay-btn">下載</a>
@@ -53,7 +53,7 @@
     </div>
   </div>
 
-  <script src="js/save.js?v=9"></script>
-  <script src="js/photo.js?v=9"></script>
+  <script src="js/save.js?v=10"></script>
+  <script src="js/photo.js?v=10"></script>
 </body>
 </html>
